@@ -125,7 +125,9 @@ public partial class View2DSetting : Node
 
     public void ApplySetting()
     {
+#if TOOLS
         if (Engine.IsEditorHint()) return;
+#endif
     
         var view = this.GetView2D();
         if (!IsInstanceValid(view)) return;

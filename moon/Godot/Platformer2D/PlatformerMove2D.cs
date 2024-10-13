@@ -71,7 +71,9 @@ public partial class PlatformerMove2D : Node
     
     public PlatformerMove2D() : base()
     {
+#if TOOLS
         if (Engine.IsEditorHint()) return;
+#endif
     
         TreeEntered += () =>
         {
@@ -87,7 +89,9 @@ public partial class PlatformerMove2D : Node
     
     public void Turn(IPlatformer2D platformer)
     {
+#if TOOLS    
         if (Engine.IsEditorHint()) return;
+#endif
     
         if (TurnMode == PlatformerMove2DTurnMode.None) return;
         
@@ -101,7 +105,9 @@ public partial class PlatformerMove2D : Node
 
     public void SetMoveSpeed(double delta)
     {
+#if TOOLS 
         if (Engine.IsEditorHint()) return;
+#endif
         
         if (Platformer is IPlatformer2D platformer)
         {
