@@ -1,0 +1,165 @@
+﻿using Godot;
+using System;
+
+namespace Utils;
+
+/// <summary>
+/// math functions
+/// </summary>
+public static partial class Mathe
+{
+    public static Vector2 WithAxis(this Vector2 origin, Vector2 axis)
+    {
+        var dir = axis.Normalized();
+        origin -= dir * dir.Dot(origin);
+        return origin + axis;
+    }
+    
+    // the search function should be like: search(x) = true if x < t, false otherwise
+    // the binary search function tries to find the t value
+    
+    public static double BinarySearch(Func<double, bool> search, double step = 256d)
+    {
+        if (!search(0d)) return 0d;
+
+        var a = 0d;
+        var b = step;
+
+        while (search(b)) b *= 2d;
+
+        while (b - a > 1d)
+        {
+            var c = (a + b) / 2d;
+            if (search(c)) a = c;
+            else b = c;
+        }
+
+        return b;
+    }
+    
+    public static float BinarySearch(Func<float, bool> search, float step = 256f)
+    {
+        if (!search(0f)) return 0f;
+
+        var a = 0f;
+        var b = step;
+
+        while (search(b)) b *= 2f;
+
+        while (b - a > 1f)
+        {
+            var c = (a + b) / 2f;
+            if (search(c)) a = c;
+            else b = c;
+        }
+
+        return b;
+    }
+    
+    public static double Accelerate(double speed, double acc, double dec, double max, double delta)
+    {
+        if (speed < max)
+        {
+            speed += acc * delta;
+            speed = speed > max ? max : speed;
+        }
+        else if (speed > max) 
+        {
+            speed -= dec * delta;
+            speed = speed < max ? max : speed;
+        }
+
+        return speed;
+    }
+
+    public static float Accelerate(float speed, float acc, float dec, float max, float delta)
+    {
+        if (speed < max)
+        {
+            speed += acc * delta;
+            speed = speed > max ? max : speed;
+        }
+        else if (speed > max) 
+        {
+            speed -= dec * delta;
+            speed = speed < max ? max : speed;
+        }
+
+        return speed;
+    }
+
+    public static double MoveTowardAngle(double current, double target, double delta)
+    {
+        while (current - target > double.Pi) target += double.Pi * 2f;
+        while (current - target < -double.Pi) target -= double.Pi * 2f;
+        return Mathf.MoveToward(current, target, delta);
+    }
+
+    public static float MoveTowardAngle(float current, float target, float delta)
+    {
+        while (current - target > float.Pi) target += float.Pi * 2f;
+        while (current - target < -float.Pi) target -= float.Pi * 2f;
+        return Mathf.MoveToward(current, target, delta);
+    }
+
+    public static Vector2 MoveTowardDir(Vector2 origin, Vector2 target, double delta)
+    {
+        var o = origin.Angle();
+        var t = target.Angle();
+        return Vector2.Right.Rotated((float)MoveTowardAngle(o, t, delta));
+    }
+
+    public static double ClampAngle(double angle, double center, double spread)
+    {
+        angle = Mathf.Wrap(angle, -double.Pi, double.Pi);
+        center = Mathf.Wrap(center, -double.Pi, double.Pi);
+        double diff = Mathf.Wrap(center - angle, -double.Pi, double.Pi);
+        if (Math.Abs(diff) < spread) return angle;
+
+        var min = center - spread;
+        var max = center + spread;
+        var dmin = Mathf.Wrap(min - angle, -double.Pi, double.Pi);
+        var dmax = Mathf.Wrap(max - angle, -double.Pi, double.Pi);
+        return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
+    }
+
+    public static float ClampAngle(float angle, float center, float spread)
+    {
+        angle = Mathf.Wrap(angle, -float.Pi, float.Pi);
+        center = Mathf.Wrap(center, -float.Pi, float.Pi);
+        float diff = Mathf.Wrap(center - angle, -float.Pi, float.Pi);
+        if (Math.Abs(diff) < spread) return angle;
+
+        var min = center - spread;
+        var max = center + spread;
+        var dmin = Mathf.Wrap(min - angle, -float.Pi, float.Pi);
+        var dmax = Mathf.Wrap(max - angle, -float.Pi, float.Pi);
+        return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
+    }
+
+    public static Vector2 ClampDir(Vector2 dir, Vector2 normal, double spread)
+        => Vector2.Right.Rotated((float)ClampAngle(dir.Angle(), normal.Angle(), spread));
+
+    // random
+    public static RandomNumberGenerator RNG { get ;set; }= new();
+
+    /// <summary>
+    /// 0~1 (inclusive)
+    /// </summary>
+    public static float Randf() => RNG.Randf();
+
+    /// <summary>
+    /// min~max (inclusive)
+    /// </summary>
+    public static float RandfRange(float min, float max) => RNG.RandfRange(min, max);
+
+    /// <summary>
+    /// 0~4294967295 (inclusive)
+    /// </summary>
+    public static uint Randi() => RNG.Randi();
+
+    /// <summary>
+    /// min~max (inclusive)
+    /// </summary>
+    public static int RandiRange(int min, int max) => RNG.RandiRange(min, max);
+}

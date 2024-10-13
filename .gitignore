@@ -1,0 +1,16 @@
+# Godot 4+ specific ignores
+.godot/
+export_presets.cfg
+
+# ide config ignores
+
+.editorconfig
+.vs/
+Moon.csproj.user
+Properties/
+.idea/
+
+# exclude folders
+
+test/
+.raw/
