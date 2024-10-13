@@ -20,7 +20,7 @@ public partial class UTimer : Node
     [Export]
     public UTimerProcessCallback ProcessCallback { get ;set; } = UTimerProcessCallback.Idle;
     
-    [Export]
+    [Export(PropertyHint.Range, "0.001,4096,or_greater")]
     public double WaitTime { get ;set; } = 1d;
 
     [Signal]

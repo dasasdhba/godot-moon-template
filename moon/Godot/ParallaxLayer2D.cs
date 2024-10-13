@@ -1,4 +1,3 @@
-using Godot;
 using Godot.Collections;
 
 namespace Godot;
@@ -26,11 +25,13 @@ public partial class ParallaxLayer2D : ParallaxLayer
 
     public override void _Process(double delta)
     {
+#if TOOLS    
         if (Engine.IsEditorHint())
         {
             Transform = new(0f, Vector2.Zero);
             return;
         }
+#endif        
         
         var offset = MotionOffset;
 
