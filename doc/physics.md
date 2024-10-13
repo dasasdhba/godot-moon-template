@@ -1,4 +1,4 @@
-# Physics
+# Physics2D
 
 ## The Physics Layer
 
@@ -9,9 +9,9 @@ It's recommended to use `layer 32` for general physics collision, and put anythi
 We don't use any moniterable `Area2D` and avoid using it to do overlapping test.
 `Area2D` should only be used for RigidBody's gravity override or as a simple trigger.
 
-The main reason is that `Area2D` does not provide a reliable overlapping query: it may delay a few frames, which can cause unexpected behavior.
+The main reason is that `Area2D` does not provide a reliable overlapping query: it may delay a few frames or even ignore any static bodies, which can cause unexpected behavior.
 
-Using `StaticBody2D` with an `OverlappingSycn2D` node is recommended for overlapping test, though it's costly and may cause performance issues. (See comments in `Overlap2D.cs`)
+Using `StaticBody2D` with an `OverlappingSycn2D` node is recommended for general overlapping test, though it's costly and may cause performance issues. If convenient, `ShapeCast2D` or `RayCast2D` should be a better choice. (See comments in `Overlap2D.cs`)
 
 ## Object Identification
 

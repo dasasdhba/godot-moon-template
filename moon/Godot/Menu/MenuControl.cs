@@ -5,8 +5,7 @@ using Utils;
 namespace Godot;
 
 // provide a simplified workflow for creating user interfaces in Godot
-// this control node does not handle any draw operations
-// only handles the logic of the menu
+// it only handles the logic of menu
 
 [GlobalClass]
 public partial class MenuControl : Node

@@ -37,7 +37,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     public float GravityDecRate { get; set; } = 1.5f;
 
     [Export]
-     public float GravityWaterScale { get; set; } = 0.25f;
+    public float GravityWaterScale { get; set; } = 0.25f;
 
     [Export] 
     public float GravityWaterMaxSpeed { get; set; } = 150f;

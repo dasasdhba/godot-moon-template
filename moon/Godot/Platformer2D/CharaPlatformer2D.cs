@@ -144,7 +144,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
 
     /// <summary>
     /// Alternate of IsOnWall(),
-    /// since we have make getting through single pit build-in.
+    /// since we have made getting through single pit build-in.
     /// </summary>
     public bool IsReallyOnWall() => OnWall;
 
