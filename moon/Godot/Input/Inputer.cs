@@ -4,7 +4,7 @@ using Utils;
 namespace Godot;
 
 [GlobalClass]
-public partial class Inputer : Node
+public abstract partial class Inputer : Node
 {
     public enum InputBufferProcessCallback
     {
@@ -29,7 +29,7 @@ public partial class Inputer : Node
             => (Pressed, JustPressed, JustReleased) = (pressed, justPressed, justReleased);
     }
 
-    public virtual InputKey GetKey(string key) => new();
+    public abstract InputKey GetKey(string key);
 
     private Dictionary<string, bool> BufferMaps { get ;set; } = new();
 
