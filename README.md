@@ -5,7 +5,6 @@ A personal customized Godot is needed, see [Godot-Moon](https://github.com/dasas
 
 ## Plan list
 
-1. Better GUI Control (mainly for easy usage)
-2. General Music/Scene/Save/Pause Singleton
-3. Aseprite workflow
-4. detailed documentation
+1. General Music/Scene/Save/Pause Singleton
+2. Aseprite workflow
+3. detailed documentation

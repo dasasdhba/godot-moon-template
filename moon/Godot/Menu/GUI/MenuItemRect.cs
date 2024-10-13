@@ -9,8 +9,8 @@ public partial class MenuItemRect : Control
     
     public bool IsDisabled() => !IsInstanceValid(MenuItem) || MenuItem.Disabled;
     public bool IsFocus() => IsInstanceValid(MenuItem) && MenuItem.IsFocus();
-    public bool IsSelectable() => !IsDisabled() && IsInstanceValid(MenuItem.Menu);
-
+    public bool IsSelectable() => !IsDisabled() && IsInstanceValid(MenuItem.Menu) && !MenuItem.Menu.Disabled;
+    
     public override void _GuiInput(InputEvent e)
     {
         if (!IsSelectable()) return;

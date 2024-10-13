@@ -20,12 +20,22 @@ public partial class MenuControl : Node
     [Export]
     public bool LoopSelection { get; set; } = false;
     
+    [ExportGroup("ContinuousMoving", "Continuous")]
+    [Export]
+    public double ContinuousMoveDelay { get ; set; } = 0.5d;
+    
+    [Export]
+    public double ContinuousMoveInterval { get ; set; } = 0.1d;
+    
     [Signal]
     public delegate void MovedEventHandler();
     
     public MenuItem CurrentItem { get ;set; }
-    
     public List<MenuItem> Items { get ;set; } = new();
+    
+    private int ContinuousMoveDir { get ; set; } = 0;
+    private double ContinuousMoveTimer { get ; set; } = 0d;
+    private double ContinuousMoveInternalTimer { get ; set; } = 0d;
 
     public MenuControl() : base()
     {
@@ -41,24 +51,55 @@ public partial class MenuControl : Node
     
         TreeEntered += () =>
         {
-            this.AddPhysicsProcess(() =>
+            this.AddPhysicsProcess((delta) =>
             {
-                if (Disabled) return;
+                if (Disabled)
+                {
+                    ContinuousMoveDir = 0;
+                    ContinuousMoveTimer = 0d;
+                    ContinuousMoveInternalTimer = 0d;
+                    return;
+                }
             
-                var dir = Convert.ToInt16(IsMoveNext())
-                    - Convert.ToInt16(IsMovePrev());
+                var dir = Convert.ToInt16(IsMovingNext())
+                    - Convert.ToInt16(IsMovingPrev());
+                if (dir != ContinuousMoveDir)
+                {
+                    ContinuousMoveDir = dir;
+                    ContinuousMoveTimer = 0d;
+                    ContinuousMoveInternalTimer = 0d;
+                }
+                else
+                {
+                    dir = 0;
+                    if (ContinuousMoveTimer < ContinuousMoveDelay)
+                    {
+                        ContinuousMoveTimer += delta;
+                    }
+                    else
+                    {
+                        ContinuousMoveInternalTimer += delta;
+                        if (ContinuousMoveInternalTimer >= ContinuousMoveInterval)
+                        {
+                            ContinuousMoveInternalTimer = 0d;
+                            dir = ContinuousMoveDir;
+                        }
+                    }
+                }
                 
                 if (dir > 0) TryMoveNext();
                 else if (dir < 0) TryMovePrev();
                 
-                if (IsSelect()) Select();
+                if (IsSelected()) Select();
             });
         };
+        
+        Ready += () => CurrentItem = DefaultItem;
     }
     
-    public virtual bool IsMovePrev() => Input.IsActionJustPressed("Up");
-    public virtual bool IsMoveNext() => Input.IsActionJustPressed("Down");
-    public virtual bool IsSelect() => Input.IsActionJustPressed("Select");
+    public virtual bool IsMovingPrev() => Input.IsActionPressed("Up");
+    public virtual bool IsMovingNext() => Input.IsActionPressed("Down");
+    public virtual bool IsSelected() => Input.IsActionJustPressed("Select");
     
     public void Select() => CurrentItem.EmitSignal(MenuItem.SignalName.Selected);
 
