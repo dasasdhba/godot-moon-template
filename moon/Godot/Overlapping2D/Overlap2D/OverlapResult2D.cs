@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // Type or member is obsolete
 namespace Godot;
 
 public struct OverlapResult2D<T> where T : GodotObject
