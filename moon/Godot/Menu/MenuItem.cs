@@ -7,7 +7,22 @@ public partial class MenuItem : Node
 {
     [ExportCategory("MenuItem")]
     [Export]
-    public bool Disabled { get ;set; } = false;
+    public bool Disabled
+    {
+        get => _Disabled;
+        set
+        {
+            _Disabled = value;
+            if (_Disabled && IsFocus())
+            {
+                Menu.TryMoveNext(false);
+                if (Menu.CurrentItem == this) Menu.TryMovePrev(false);
+                if (Menu.CurrentItem == this) Menu.CurrentItem = null;
+            }
+        }
+    }
+    
+    private bool _Disabled = false;
     
     [Signal]
     public delegate void SelectedEventHandler();

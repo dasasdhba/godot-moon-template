@@ -3,6 +3,8 @@ using Utils;
 
 namespace Godot;
 
+// menu panel appear/disappear animation
+
 [GlobalClass]
 public partial class MenuPanel : Control
 {
@@ -12,6 +14,12 @@ public partial class MenuPanel : Control
 
     [Export]
     public bool HideAtStart { get ;set; } = false;
+    
+    [Signal]
+    public delegate void AppearedEventHandler();
+    
+    [Signal]
+    public delegate void DisappearedEventHandler();
 
     public MenuPanel() : base()
     {
@@ -53,6 +61,7 @@ public partial class MenuPanel : Control
     {
         await AppearAsync().Forget(this, AppearTag);
         EnableMenu();
+        EmitSignal(SignalName.Appeared);
     }
 
     protected virtual async Task AppearAsync(double time = 0.3d)
@@ -70,9 +79,10 @@ public partial class MenuPanel : Control
     {
         DisableMenu();
         await DisappearAsync().Forget(this, DisappearTag);
+        EmitSignal(SignalName.Disappeared);
     }
 
-    protected async Task DisappearAsync(double time = 0.3d)
+    protected virtual async Task DisappearAsync(double time = 0.3d)
     {
         Async.Clear(this, DisappearTag);
 

@@ -84,12 +84,16 @@ public partial class MenuScrollContainer : Control
             {
                 if (ScrollHorizontalRate > 0d)
                 {
-                    ScrollToX(GetCurrentFocusX(), delta * ScrollHorizontalRate);
+                    var x = GetCurrentFocusX();
+                    if (x >= 0f)
+                        ScrollToX(x, delta * ScrollHorizontalRate);
                 }
                 
                 if (ScrollVerticalRate > 0d)
                 {
-                    ScrollToY(GetCurrentFocusY(), delta * ScrollVerticalRate);
+                    var y = GetCurrentFocusY();
+                    if (y >= 0f)
+                        ScrollToY(y, delta * ScrollVerticalRate);
                 }
             }, () => ProcessCallback == MenuScrollContainerProcessCallback.Physics);
         };

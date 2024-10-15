@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Component;
 using Utils;
 
 namespace Godot;
@@ -18,24 +20,39 @@ public partial class MenuControl : Node
     public bool Disabled { get; set; } = false;
     
     [Export]
+    public bool KeyDisabled { get; set; } = false;
+    
+    [Export]
     public bool LoopSelection { get; set; } = false;
     
     [ExportGroup("ContinuousMoving", "Continuous")]
     [Export]
     public double ContinuousMoveDelay { get ; set; } = 0.5d;
     
+    /// <summary>
+    /// should not be changed during runtime
+    /// </summary>
     [Export]
-    public double ContinuousMoveInterval { get ; set; } = 0.1d;
+    public double ContinuousMoveInterval { get ; private set; } = 0.1d;
+    
+    [ExportGroup("GuiBinding")]
+    [Export]
+    public MenuPanel Panel { get ;set; }
+    
+    [Export]
+    public MenuScrollContainer ScrollContainer { get ;set; }
+    
+    [Export]
+    public MenuItemList ItemList { get ;set; }
     
     [Signal]
     public delegate void MovedEventHandler();
     
+    [Signal]
+    public delegate void SelectedEventHandler(MenuItem item);
+    
     public MenuItem CurrentItem { get ;set; }
     public List<MenuItem> Items { get ;set; } = new();
-    
-    private int ContinuousMoveDir { get ; set; } = 0;
-    private double ContinuousMoveTimer { get ; set; } = 0d;
-    private double ContinuousMoveInternalTimer { get ; set; } = 0d;
 
     public MenuControl() : base()
     {
@@ -51,59 +68,84 @@ public partial class MenuControl : Node
     
         TreeEntered += () =>
         {
+            if (Panel != null) Panel.Menu = this;
+        
             this.AddPhysicsProcess((delta) =>
             {
-                if (Disabled)
-                {
-                    ContinuousMoveDir = 0;
-                    ContinuousMoveTimer = 0d;
-                    ContinuousMoveInternalTimer = 0d;
-                    return;
-                }
-            
-                var dir = Convert.ToInt16(IsMovingNext())
-                    - Convert.ToInt16(IsMovingPrev());
-                if (dir != ContinuousMoveDir)
-                {
-                    ContinuousMoveDir = dir;
-                    ContinuousMoveTimer = 0d;
-                    ContinuousMoveInternalTimer = 0d;
-                }
-                else
-                {
-                    dir = 0;
-                    if (ContinuousMoveTimer < ContinuousMoveDelay)
-                    {
-                        ContinuousMoveTimer += delta;
-                    }
-                    else
-                    {
-                        ContinuousMoveInternalTimer += delta;
-                        if (ContinuousMoveInternalTimer >= ContinuousMoveInterval)
-                        {
-                            ContinuousMoveInternalTimer = 0d;
-                            dir = ContinuousMoveDir;
-                        }
-                    }
-                }
+                var disabled = Disabled || KeyDisabled;
+                MoveProcess(disabled, delta);
                 
-                if (dir > 0) TryMoveNext();
-                else if (dir < 0) TryMovePrev();
-                
-                if (IsSelected()) Select();
+                if (!disabled && IsSelected()) Select();
             });
         };
         
         Ready += () => CurrentItem = DefaultItem;
     }
+
+    public void AddItem(MenuItem item)
+    {
+        if (item != null && item.Menu != this)
+        {
+            item.Menu = this;
+            Items.Add(item);
+        }
+    }
+    
+    public void AddItem(MenuItemRect itemRect) => AddItem(itemRect.MenuItem);
     
     public virtual bool IsMovingPrev() => Input.IsActionPressed("Up");
     public virtual bool IsMovingNext() => Input.IsActionPressed("Down");
     public virtual bool IsSelected() => Input.IsActionJustPressed("Select");
     
-    public void Select() => CurrentItem.EmitSignal(MenuItem.SignalName.Selected);
+    public void Select()
+    {
+        if (!IsInstanceValid(CurrentItem)) return;
+        
+        CurrentItem.EmitSignal(MenuItem.SignalName.Selected);
+        EmitSignal(SignalName.Selected, CurrentItem);
+    }
+    
+    private Tracker<int> ContinuousDirTracker { get ; set; }
+    private STimer ContinuousMoveTimer { get ; set; }
 
-    public void TryMoveNext()
+    public virtual void MoveProcess(bool disabled, double delta)
+    {
+        ContinuousDirTracker ??= new(0);
+        if (ContinuousMoveTimer == null && ContinuousMoveDelay > 0d && ContinuousMoveInterval > 0d)
+        {
+            ContinuousMoveTimer = new(ContinuousMoveDelay);
+        }
+
+        if (disabled)
+        {
+            ContinuousMoveTimer?.Clear();
+            ContinuousDirTracker.Reset(0);
+            return;
+        }
+        
+        var dir = Convert.ToInt16(IsMovingNext())
+                  - Convert.ToInt16(IsMovingPrev());
+        if (ContinuousDirTracker.Update(dir, delta))
+        {
+            ContinuousMoveTimer?.Clear();
+            TryMove(dir);
+        }
+        else if (ContinuousMoveTimer != null && ContinuousDirTracker.Time >= ContinuousMoveDelay)
+        {
+            if (ContinuousMoveTimer.Update(delta))
+            {
+                TryMove(dir);
+            }
+        }
+    }
+
+    private void TryMove(int dir)
+    {
+        if (dir > 0) TryMoveNext();
+        else if (dir < 0) TryMovePrev();
+    }
+
+    public virtual void TryMoveNext(bool emit = true)
     {
         var index = Items.IndexOf(CurrentItem);
         for (int i = index + 1; i < Items.Count; i++)
@@ -111,7 +153,7 @@ public partial class MenuControl : Node
             if (!Items[i].Disabled)
             {
                 CurrentItem = Items[i];
-                EmitSignal(SignalName.Moved);
+                if (emit) EmitSignal(SignalName.Moved);
                 return;
             }
         }
@@ -123,13 +165,13 @@ public partial class MenuControl : Node
             if (!Items[i].Disabled)
             {
                 CurrentItem = Items[i];
-                EmitSignal(SignalName.Moved);
+                if (emit) EmitSignal(SignalName.Moved);
                 return;
             }
         }
     }
 
-    public void TryMovePrev()
+    public virtual void TryMovePrev(bool emit = true)
     {
         var index = Items.IndexOf(CurrentItem);
         for (int i = index - 1; i >= 0; i--)
@@ -137,7 +179,7 @@ public partial class MenuControl : Node
             if (!Items[i].Disabled)
             {
                 CurrentItem = Items[i];
-                EmitSignal(SignalName.Moved);
+                if (emit) EmitSignal(SignalName.Moved);
                 return;
             }
         }
@@ -149,9 +191,46 @@ public partial class MenuControl : Node
             if (!Items[i].Disabled)
             {
                 CurrentItem = Items[i];
-                EmitSignal(SignalName.Moved);
+                if (emit) EmitSignal(SignalName.Moved);
                 return;
             }
+        }
+    }
+
+    public async Task GuiAppear(MenuItem item = null)
+    {
+        // update item
+
+        if (item != null && Items.Contains(item) && !item.Disabled)
+        {
+            CurrentItem = item;
+            if (IsInstanceValid(ScrollContainer))
+                ScrollContainer.ForceUpdate();
+        }
+        else if (CurrentItem == null)
+        {
+            CurrentItem = Items.Find(i => !i.Disabled);
+            if (CurrentItem != null && IsInstanceValid(ScrollContainer))
+                ScrollContainer.ForceUpdate();
+        }
+        
+        if (IsInstanceValid(ItemList)) ItemList.Sort();
+        
+        if (IsInstanceValid(Panel)) await Panel.Appear();
+        else
+        {
+            await Async.Wait(this, 0.1f);
+            Disabled = false;
+        }
+    }
+
+    public async Task GuiDisappear()
+    {
+        if (IsInstanceValid(Panel)) await Panel.Disappear();
+        else
+        {
+            Disabled = true;
+            await Async.Wait(this, 0.1f);
         }
     }
 }
