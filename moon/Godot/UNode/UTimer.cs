@@ -61,6 +61,12 @@ public partial class UTimer : Node
         Active = true;
     }
 
+    public void TryStart(double time = -1d)
+    {
+        if (Active) return;
+        Start(time);
+    }
+
     public void Stop() => Active = false;
 
     public UTimer() : base()

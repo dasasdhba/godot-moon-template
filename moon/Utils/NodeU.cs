@@ -122,4 +122,29 @@ public static partial class NodeU
         node.AddChild(timer, false, Node.InternalMode.Front);
         return timer;
     }
+    
+    public static UTimer ActionPhysicsDelay(this Node node, double delay, Action action)
+        => ActionDelay(node, delay, action, true);
+
+    public static UTimer ActionRepeat(this Node node, double interval, Action action, bool autostart = true, bool physics = false)
+    {
+        UTimer timer = new()
+        {
+            Autostart = autostart,
+            OneShot = false,
+            WaitTime = interval,
+            ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle
+        };
+
+        timer.SignalTimeout += () =>
+        {
+            action.Invoke();
+        }; 
+        
+        node.AddChild(timer, false, Node.InternalMode.Front);
+        return timer;
+    }
+    
+    public static UTimer ActionPhysicsRepeat(this Node node, double interval, Action action, bool autostart = true)
+        => ActionRepeat(node, interval, action, autostart, true);
 }
