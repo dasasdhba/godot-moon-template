@@ -10,51 +10,7 @@ namespace Utils;
 
 public static partial class Async
 {
-    public partial class TaskContainer : RefCounted
-    {
-        public Task Task { get; set; }
-    }
-
-    public partial class TaskContainer<T> : RefCounted
-    {
-        public Task<T> Task { get; set; }
-    }
-    
-    public static Task Forget(this Task task, Node node, string tag)
-    {
-        if (node.HasMeta("__Async__Task" + tag))
-        {
-            var container = (TaskContainer)node.GetMeta("__Async__Task" + tag);
-            container.Task?.Dispose();
-        }
-        node.SetMeta("__Async__Task" + tag, new TaskContainer { Task = task });
-        return task;
-    }
-    
-    public static Task<T> Forget<T>(this Task<T> task, Node node, string tag)
-    {
-        if (node.HasMeta("__Async__Task" + tag))
-        {
-            var container = (TaskContainer<T>)node.GetMeta("__Async__Task" + tag);
-            container.Task?.Dispose();
-        }
-        node.SetMeta("__Async__Task" + tag, new TaskContainer<T> { Task = task });
-        return task;
-    }
-
-    /// <summary>
-    /// clear internal async nodes with tag.
-    /// </summary>
-    public static void Clear(Node node, string tag)
-    {
-        foreach (var child in node.GetChildren(true))
-        {
-            if (child.HasMeta("__Async" + tag))
-                child.QueueFree();
-        }
-    }
-
-    public static async Task Wait(Node node, double time, string tag = "", bool physics = false)
+    public static async Task Wait(Node node, double time, bool physics = false)
     {
         UTimer timer = new()
         {
@@ -62,14 +18,14 @@ public static partial class Async
             WaitTime = time,
             ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle
         };
-        if (tag != "") timer.SetMeta("__Async" + tag, true);
+
         timer.SignalTimeout += timer.QueueFree;
         node.AddChild(timer, false, Node.InternalMode.Front);
         await timer.ToSignal(timer, UTimer.SignalName.Timeout);
     }
 
-    public static Task WaitPhysics(Node node, double time, string tag = "")
-        => Wait(node, time, tag, true);
+    public static Task WaitPhysics(Node node, double time)
+        => Wait(node, time, true);
 
     public partial class AsyncProcessTimer : UTimer
     {
@@ -84,7 +40,7 @@ public static partial class Async
         }
     }
 
-    public static async Task WaitProcess(Node node, double time, Action<double> process, string tag = "", bool physics = false)
+    public static async Task WaitProcess(Node node, double time, Action<double> process, bool physics = false)
     {
         AsyncProcessTimer timer = new()
         {
@@ -93,14 +49,14 @@ public static partial class Async
             ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle,
             Process = process
         };
-        if (tag != "") timer.SetMeta("__Async" + tag, true);
+
         timer.SignalTimeout += timer.QueueFree;
         node.AddChild(timer, false, Node.InternalMode.Front);
         await timer.ToSignal(timer, UTimer.SignalName.Timeout);
     }
 
-    public static Task WaitPhysicsProcess(Node node, double time, Action<double> process, string tag = "")
-        => WaitProcess(node, time, process, tag, true);
+    public static Task WaitPhysicsProcess(Node node, double time, Action<double> process)
+        => WaitProcess(node, time, process, true);
 
     public partial class AsyncDelegateNode : Node
     {
@@ -125,42 +81,42 @@ public static partial class Async
         }
     }
 
-    public static Task Delegate(Node node, Func<bool> action, string tag = "", bool physics = false)
-    => DelegateProcess(node, (delta) => action.Invoke(), tag, physics);
+    public static Task Delegate(Node node, Func<bool> action, bool physics = false)
+    => DelegateProcess(node, (delta) => action.Invoke(), physics);
 
-    public static Task DelegatePhysics(Node node, Func<bool> action, string tag = "")
-        => Delegate(node, action, tag, true);
+    public static Task DelegatePhysics(Node node, Func<bool> action)
+        => Delegate(node, action, true);
 
-    public static async Task DelegateProcess(Node node, Func<double, bool> action, string tag = "", bool physics = false)
+    public static async Task DelegateProcess(Node node, Func<double, bool> action, bool physics = false)
     {
         AsyncDelegateNode delegateNode = new()
         {
             Action = action,
             IsPhysics = physics
         };
-        if (tag != "") delegateNode.SetMeta("__Async" + tag, true);
+
         node.AddChild(delegateNode, false, Node.InternalMode.Front); 
         await delegateNode.ToSignal(delegateNode, AsyncDelegateNode.SignalName.Finished);
     }
 
-    public static Task DelegatePhysicsProcess(Node node, Func<double, bool> action, string tag = "")
-        => DelegateProcess(node, action, tag, true);
+    public static Task DelegatePhysicsProcess(Node node, Func<double, bool> action)
+        => DelegateProcess(node, action, true);
 
-    public static Task Wait(Node node, Task task, string tag = "", bool physics = false)
-        => Delegate(node, () => task.IsCompleted, tag, physics);
+    public static Task Wait(Node node, Task task, bool physics = false)
+        => Delegate(node, () => task.IsCompleted, physics);
 
-    public static Task WaitPhysics(Node node, Task task, string tag = "")
-        => Wait(node, task, tag, true);
+    public static Task WaitPhysics(Node node, Task task)
+        => Wait(node, task, true);
 
-    public static Task WaitProcess(Node node, Task task, Action<double> process, string tag = "", bool physics = false)
+    public static Task WaitProcess(Node node, Task task, Action<double> process, bool physics = false)
         => DelegateProcess(node, (delta) =>
         {
             process.Invoke(delta);
             return task.IsCompleted;
-        }, tag, physics);
+        }, physics);
 
-    public static Task WaitPhysicsProcess(Node node, Task task, Action<double> process, string tag = "")
-        => WaitProcess(node, task, process, tag, true);
+    public static Task WaitPhysicsProcess(Node node, Task task, Action<double> process)
+        => WaitProcess(node, task, process, true);
 
     public partial class AsyncTweenNode : Node
     {
@@ -188,7 +144,7 @@ public static partial class Async
         }
     }
 
-    public static async Task WaitProcess(Node node, Tween tween, Action<double> process, string tag = "", bool physics = false)
+    public static async Task WaitProcess(Node node, Tween tween, Action<double> process, bool physics = false)
     {
         AsyncTweenNode tweenNode = new()
         {
@@ -198,17 +154,17 @@ public static partial class Async
         };
         tween.Pause();
         tween.BindNode(tweenNode);
-        if (tag != "") tweenNode.SetMeta("__Async" + tag, true);
+
         node.AddChild(tweenNode, false, Node.InternalMode.Front);
         await tweenNode.ToSignal(tweenNode, AsyncDelegateNode.SignalName.Finished);
     }
 
-    public static Task WaitPhysicsProcess(Node node, Tween tween, Action<double> process, string tag = "")
-        => WaitProcess(node, tween, process, tag, true);
+    public static Task WaitPhysicsProcess(Node node, Tween tween, Action<double> process)
+        => WaitProcess(node, tween, process, true);
 
-    public static Task Wait(Node node, Tween tween, string tag = "", bool physics = false)
-        => WaitProcess(node, tween, null, tag, physics);
+    public static Task Wait(Node node, Tween tween, bool physics = false)
+        => WaitProcess(node, tween, null, physics);
 
-    public static Task WaitPhysics(Node node, Tween tween, string tag = "")
-        => Wait(node, tween, tag, true);
+    public static Task WaitPhysics(Node node, Tween tween)
+        => Wait(node, tween, true);
 }
