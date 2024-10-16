@@ -19,7 +19,7 @@ public partial class Draw2D : Node2D
     private Draw2DBlendMode BlendMode = Draw2DBlendMode.Mix;
 
     /// <summary>
-    /// Attention: Blend mode will be overridden by custom material.
+    /// Blend mode will be overridden by custom material.
     /// </summary>
     protected void SetBlendMode(Draw2DBlendMode blendMode) => BlendMode = blendMode;
     protected void ResetBlendMode() => BlendMode = Draw2DBlendMode.Mix;
@@ -46,7 +46,7 @@ public partial class Draw2D : Node2D
     private Material DrawMaterial = null;
 
     /// <summary>
-    /// Attention: Non-null material will override blend mode setting.
+    /// Non-null material will override blend mode setting.
     /// </summary>
     protected void SetDrawMaterial(Material material) => DrawMaterial = material;
     protected void ResetDrawMaterial() => DrawMaterial = null;
