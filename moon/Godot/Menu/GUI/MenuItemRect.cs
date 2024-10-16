@@ -6,6 +6,16 @@ public partial class MenuItemRect : Control
     [ExportCategory("MenuItemRect")]
     [Export]
     public MenuItem MenuItem { get; set; }
+
+    public MenuItemRect() : base()
+    {
+        TreeEntered += () =>
+        {
+            if (MenuItem == null) return;
+            
+            MenuItem.Rect = this;
+        };
+    }
     
     public bool IsDisabled() => !IsInstanceValid(MenuItem) || MenuItem.Disabled;
     public bool IsFocus() => IsInstanceValid(MenuItem) && MenuItem.IsFocus();

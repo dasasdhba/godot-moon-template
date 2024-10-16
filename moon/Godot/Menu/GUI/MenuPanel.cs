@@ -54,41 +54,34 @@ public partial class MenuPanel : Control
         DisableMenu();
     }
     
-    protected const string AppearTag = "AppearTag";
-    protected const string DisappearTag = "DisappearTag";
-
     public async Task Appear()
     {
-        await AppearAsync().Forget(this, AppearTag);
+        await AppearAsync();
         EnableMenu();
         EmitSignal(SignalName.Appeared);
     }
 
     protected virtual async Task AppearAsync(double time = 0.3d)
     {
-        Async.Clear(this, AppearTag);
-        
         Show();
         
         var tween = GetTree().CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 1f }, time);
-        await Async.Wait(this, tween, AppearTag);
+        await Async.Wait(this, tween);
     }
 
     public async Task Disappear()
     {
         DisableMenu();
-        await DisappearAsync().Forget(this, DisappearTag);
+        await DisappearAsync();
         EmitSignal(SignalName.Disappeared);
     }
 
     protected virtual async Task DisappearAsync(double time = 0.3d)
     {
-        Async.Clear(this, DisappearTag);
-
         var tween = GetTree().CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 0f }, time);
-        await Async.Wait(this, tween, DisappearTag);
+        await Async.Wait(this, tween);
 
         Hide();
     }

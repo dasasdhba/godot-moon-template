@@ -27,6 +27,9 @@ public partial class MenuItem : Node
     [Signal]
     public delegate void SelectedEventHandler();
     
+    // set by MenuItemRect node
+    public MenuItemRect Rect { get; set; }
+    
     // set by MenuControl node
     public MenuControl Menu { get; set; }
     public bool IsFocus() => IsInstanceValid(Menu) && Menu.CurrentItem == this;
