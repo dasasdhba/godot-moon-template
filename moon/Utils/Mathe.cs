@@ -15,9 +15,10 @@ public static partial class Mathe
         return origin + axis;
     }
     
-    // the search function should be like: search(x) = true if x < t, false otherwise
-    // the binary search function tries to find the t value
-    
+    /// <summary>
+    /// the search function should be like: search(x) = true if x &lt; t where t &gt; 0, false otherwise.
+    /// the binary search function tries to find the t value
+    /// </summary>
     public static double BinarySearch(Func<double, bool> search, double step = 256d)
     {
         if (!search(0d)) return 0d;
@@ -37,6 +38,9 @@ public static partial class Mathe
         return b;
     }
     
+    /// <summary>
+    /// <inheritdoc cref="BinarySearch(System.Func{double,bool},double)"/>>
+    /// </summary>
     public static float BinarySearch(Func<float, bool> search, float step = 256f)
     {
         if (!search(0f)) return 0f;
@@ -57,58 +61,44 @@ public static partial class Mathe
     }
     
     public static double Accelerate(double speed, double acc, double dec, double max, double delta)
-    {
-        if (speed < max)
-        {
-            speed += acc * delta;
-            speed = speed > max ? max : speed;
-        }
-        else if (speed > max) 
-        {
-            speed -= dec * delta;
-            speed = speed < max ? max : speed;
-        }
-
-        return speed;
-    }
-
+        => Mathf.MoveToward(speed, max, speed < max ? acc * delta : dec * delta);
+    
     public static float Accelerate(float speed, float acc, float dec, float max, float delta)
-    {
-        if (speed < max)
-        {
-            speed += acc * delta;
-            speed = speed > max ? max : speed;
-        }
-        else if (speed > max) 
-        {
-            speed -= dec * delta;
-            speed = speed < max ? max : speed;
-        }
+        => Mathf.MoveToward(speed, max, speed < max ? acc * delta : dec * delta);
 
-        return speed;
-    }
-
+    /// <summary>
+    /// move an angle towards another one in closest direction
+    /// </summary>
     public static double MoveTowardAngle(double current, double target, double delta)
     {
         while (current - target > double.Pi) target += double.Pi * 2f;
         while (current - target < -double.Pi) target -= double.Pi * 2f;
         return Mathf.MoveToward(current, target, delta);
     }
-
+    
+    /// <summary>
+    /// <inheritdoc cref="MoveTowardAngle(double,double,double)"/>>
+    /// </summary>
     public static float MoveTowardAngle(float current, float target, float delta)
     {
         while (current - target > float.Pi) target += float.Pi * 2f;
         while (current - target < -float.Pi) target -= float.Pi * 2f;
         return Mathf.MoveToward(current, target, delta);
     }
-
+    
+    /// <summary>
+    /// move a direction vector towards another one by angle
+    /// </summary>
     public static Vector2 MoveTowardDir(Vector2 origin, Vector2 target, double delta)
     {
         var o = origin.Angle();
         var t = target.Angle();
         return Vector2.Right.Rotated((float)MoveTowardAngle(o, t, delta));
     }
-
+    
+    /// <summary>
+    /// clamp an angle in center ± spread range
+    /// </summary>
     public static double ClampAngle(double angle, double center, double spread)
     {
         angle = Mathf.Wrap(angle, -double.Pi, double.Pi);
@@ -122,7 +112,10 @@ public static partial class Mathe
         var dmax = Mathf.Wrap(max - angle, -double.Pi, double.Pi);
         return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
     }
-
+    
+    /// <summary>
+    /// <inheritdoc cref="ClampAngle(double,double,double)"/>>
+    /// </summary>
     public static float ClampAngle(float angle, float center, float spread)
     {
         angle = Mathf.Wrap(angle, -float.Pi, float.Pi);
@@ -136,7 +129,10 @@ public static partial class Mathe
         var dmax = Mathf.Wrap(max - angle, -float.Pi, float.Pi);
         return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
     }
-
+    
+    /// <summary>
+    /// clamp a direction vector in normal.Rotate(±spread) range
+    /// </summary>
     public static Vector2 ClampDir(Vector2 dir, Vector2 normal, double spread)
         => Vector2.Right.Rotated((float)ClampAngle(dir.Angle(), normal.Angle(), spread));
 

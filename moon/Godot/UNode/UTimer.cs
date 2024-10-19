@@ -2,6 +2,9 @@
 
 namespace Godot;
 
+/// <summary>
+/// Alternate of Godot Timer
+/// </summary>
 [GlobalClass]
 public partial class UTimer : Node
 {

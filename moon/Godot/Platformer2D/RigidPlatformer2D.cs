@@ -75,23 +75,11 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     public virtual void RigidProcess(PhysicsDirectBodyState2D state, double delta) { }
     
     protected OverlapSync2D WaterOverlap { get; set; }
-    
-    private static readonly PhysicsMaterial SlipMaterial = CreateSlipMaterial();
-    private static PhysicsMaterial CreateSlipMaterial()
-    {
-        var material = new PhysicsMaterial();
-        material.Friction = 0f;
-        return material;
-    }
 
     public RigidPlatformer2D() : base()
     {
         TreeEntered += () =>
         {
-            // use material with no friction by default
-        
-            PhysicsMaterialOverride ??= SlipMaterial;
-            
             // enable contact for floor and ceiling detection
             
             ContactMonitor = true;
@@ -144,9 +132,11 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
         );
     }
     
-    // ATTENTION: GetGravity() is not valid until physics init
+    /// <summary>
+    /// Warning: GetGravity() is not valid until physics init
+    /// </summary>
     public Vector2 GetGravityDirection() => GetGravity().Normalized();
-
+    
     public void SetGravitySpeed(float speed)
     {
         SignalOneshotRigidFrame += (state, delta) =>
@@ -165,6 +155,11 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     
     public Vector2 GetMoveDirection() => GetGravityDirection().Orthogonal();
 
+    /// <summary>
+    /// The real speed will be a litter slower than the set one
+    /// due to the physics simulation of friction.
+    /// Setting friction to 0 is OK but we'll lost the simulation of moving blocks.
+    /// </summary>
     public void SetMoveSpeed(float speed, bool updatePhysics = false)
     {
         SignalOneshotRigidFrame += (state, delta) =>
@@ -219,6 +214,9 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             OnFloor = false;
             OnCeiling = false;
             OnWall = false;
+            
+            // HACK: we need a more precise collision detection here
+            // contact reports are proven to be unreliable
             
             // rigid body with rectangle shape often get stuck here
             // a capsule bottom is recommended

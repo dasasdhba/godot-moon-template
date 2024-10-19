@@ -80,12 +80,14 @@ public partial class PlatformerMove2D : Node
             if (Platformer is IPlatformer2D platformer)
             {
                 platformer.SignalWallCollided += () => Turn(platformer);
-                platformer.SetMoveSpeed(Speed, MoveMode == PlatformerMove2DMoveMode.Accelerate && !IgnorePhysics);
+                platformer.SetMoveSpeed(Speed, IsUpdatePhysics());
             }
             
             this.AddPhysicsProcess(SetMoveSpeed);
         };
     }
+    
+    private bool IsUpdatePhysics() => MoveMode == PlatformerMove2DMoveMode.Accelerate && !IgnorePhysics;
     
     public void Turn(IPlatformer2D platformer)
     {
@@ -100,7 +102,7 @@ public partial class PlatformerMove2D : Node
         if (TurnMode == PlatformerMove2DTurnMode.Clear) Speed = 0f;
         else Speed *= -1f;
         
-        platformer.SetMoveSpeed(Speed, MoveMode == PlatformerMove2DMoveMode.Accelerate && !IgnorePhysics);
+        platformer.SetMoveSpeed(Speed, IsUpdatePhysics());
     }
 
     public void SetMoveSpeed(double delta)

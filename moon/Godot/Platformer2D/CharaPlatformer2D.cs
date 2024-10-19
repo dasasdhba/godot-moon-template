@@ -189,7 +189,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
             if (InWater && GravityFloatingHeight >= 0f)
             {
                 var d = GetFloatingHeight() - GravityFloatingHeight;
-                Gravity += (float)((-Gravity * GravityFloatingDamp - d * GravityFloatingSpeed) * delta);
+                Gravity -= (float)((Gravity * GravityFloatingDamp + d * GravityFloatingSpeed) * delta);
             }
         }
 
@@ -206,7 +206,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
             Velocity += moveDir * moveSpeed;
         }
         
-        // ATTENTION: we've modified godot's source so here needs delta param
+        // Warning: we've modified godot's source so here needs delta param
         // since we can implement speed transform easily with NodeU pattern
         // but this will break Rapier Physics Engine for unknown reason
 
