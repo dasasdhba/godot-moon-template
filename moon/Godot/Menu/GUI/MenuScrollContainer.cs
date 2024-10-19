@@ -100,13 +100,11 @@ public partial class MenuScrollContainer : Control
     }
 
     public void AddItemRects(Node node)
-    {
-        foreach (var child in node.GetChildren())
+        => node.SetChildrenRecursively((child) =>
         {
-            if (child is MenuItemRect rect) ItemRects.Add(rect);
-            AddItemRects(child);
-        }
-    }
+            if (child is MenuItemRect rect) 
+                ItemRects.Add(rect);
+        });
 
     public void ForceUpdate()
     {

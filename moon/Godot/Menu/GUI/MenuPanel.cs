@@ -1,5 +1,4 @@
-using System.Threading.Tasks;
-using Utils;
+using GodotTask;
 
 namespace Godot;
 
@@ -54,34 +53,34 @@ public partial class MenuPanel : Control
         DisableMenu();
     }
     
-    public async Task Appear()
+    public async GDTask Appear()
     {
         await AppearAsync();
         EnableMenu();
         EmitSignal(SignalName.Appeared);
     }
 
-    protected virtual async Task AppearAsync(double time = 0.3d)
+    protected virtual async GDTask AppearAsync(double time = 0.3d)
     {
         Show();
         
-        var tween = GetTree().CreateTween();
+        var tween = CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 1f }, time);
-        await Async.Wait(this, tween);
+        await tween.AsGDTask();
     }
 
-    public async Task Disappear()
+    public async GDTask Disappear()
     {
         DisableMenu();
         await DisappearAsync();
         EmitSignal(SignalName.Disappeared);
     }
 
-    protected virtual async Task DisappearAsync(double time = 0.3d)
+    protected virtual async GDTask DisappearAsync(double time = 0.3d)
     {
-        var tween = GetTree().CreateTween();
+        var tween = CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 0f }, time);
-        await Async.Wait(this, tween);
+        await tween.AsGDTask();
 
         Hide();
     }

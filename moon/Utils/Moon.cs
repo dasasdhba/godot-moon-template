@@ -18,4 +18,13 @@ public static class Moon
         
         return null;
     }
+
+    public static void SetChildrenRecursively(this Node node, Action<Node> action, bool includeInternal = false)
+    {
+        foreach (var child in node.GetChildren(includeInternal))
+        {
+            action?.Invoke(child);
+            SetChildrenRecursively(child, action, includeInternal);
+        }
+    }
 }

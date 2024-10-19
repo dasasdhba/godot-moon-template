@@ -8,13 +8,11 @@ namespace Utils;
 public static partial class NodeU
 {
     public static void SetURate(this Node node, double rate)
-    {
-        foreach (var child in node.GetChildren(true))
+        => node.SetChildrenRecursively(child =>
         {
-            if (child is DelegateNode uNode) uNode.Rate = rate;
-            else SetURate(child, rate);
-        }
-    }
+            if (child is DelegateNode uNode) 
+                uNode.Rate = rate;
+        }, true);
 
     public partial class DelegateNode : Node
     {
