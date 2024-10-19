@@ -3,16 +3,19 @@ using System;
 
 namespace Utils;
 
-// managed delta Process Node
-
+/// <summary>
+/// managed delta Process Node with internal node approach
+/// </summary>
 public static partial class NodeU
 {
     public static void SetURate(this Node node, double rate)
-        => node.SetChildrenRecursively(child =>
+    {
+        foreach (var child in node.GetChildren(true))
         {
-            if (child is DelegateNode uNode) 
-                uNode.Rate = rate;
-        }, true);
+            if (child is DelegateNode uNode) uNode.Rate = rate;
+            else SetURate(child, rate);
+        }
+    }
 
     public partial class DelegateNode : Node
     {
@@ -80,6 +83,7 @@ public static partial class NodeU
             else uNode.SetPhysicsProcess(false);
         };
         
+        uNode.BindParent(root);
         root.TreeExited += uNode.QueueFree;
         root.AddChild(uNode, false, Node.InternalMode.Front);
         
@@ -117,6 +121,7 @@ public static partial class NodeU
                 timer.QueueFree();
         }; 
         
+        timer.BindParent(node);
         node.AddChild(timer, false, Node.InternalMode.Front);
         return timer;
     }
@@ -139,6 +144,7 @@ public static partial class NodeU
             action.Invoke();
         }; 
         
+        timer.BindParent(node);
         node.AddChild(timer, false, Node.InternalMode.Front);
         return timer;
     }

@@ -27,4 +27,16 @@ public static class Moon
             SetChildrenRecursively(child, action, includeInternal);
         }
     }
+    
+    /// <summary>
+    /// Bind internal node with parent. This prevents duplicate issues.
+    /// </summary>
+    public static void BindParent(this Node node, Node parent)
+    {
+        node.TreeEntered += () =>
+        {
+            if (node.GetParent() != parent)
+                node.QueueFree();
+        };
+    }
 }

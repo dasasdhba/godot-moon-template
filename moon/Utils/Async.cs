@@ -5,12 +5,14 @@ using GodotTask;
 namespace Utils;
 
 /// <summary>
-/// async tools based on internal nodes,
-/// this can ensure that async functions stop when the node is freed.
-/// though creating node costs a lot compared with native GDTask API.
+/// Async tools based on internal nodes.
+/// This can ensure that async functions stop when the node is freed.
+/// Though creating node costs a lot compared with native GDTask API.
 /// </summary>
 public static partial class Async
 {
+    // equivalent to GDTask.Delay
+    
     public static async GDTask Wait(Node node, double time, bool physics = false)
     {
         UTimer timer = new()
@@ -20,6 +22,7 @@ public static partial class Async
             ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle
         };
 
+        timer.BindParent(node);
         timer.SignalTimeout += timer.QueueFree;
         node.AddChild(timer, false, Node.InternalMode.Front);
         await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
@@ -51,6 +54,7 @@ public static partial class Async
             Process = process
         };
 
+        timer.BindParent(node);
         timer.SignalTimeout += timer.QueueFree;
         node.AddChild(timer, false, Node.InternalMode.Front);
         await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
@@ -58,6 +62,8 @@ public static partial class Async
 
     public static GDTask WaitPhysicsProcess(Node node, double time, Action<double> process)
         => WaitProcess(node, time, process, true);
+        
+    // equivalent to GDTask.WaitUntil
 
     public partial class AsyncDelegateNode : Node
     {
@@ -83,7 +89,7 @@ public static partial class Async
     }
 
     public static GDTask Delegate(Node node, Func<bool> action, bool physics = false)
-    => DelegateProcess(node, (delta) => action.Invoke(), physics);
+        => DelegateProcess(node, (delta) => action.Invoke(), physics);
 
     public static GDTask DelegatePhysics(Node node, Func<bool> action)
         => Delegate(node, action, true);
@@ -95,13 +101,16 @@ public static partial class Async
             Action = action,
             IsPhysics = physics
         };
-
+        
+        delegateNode.BindParent(node);
         node.AddChild(delegateNode, false, Node.InternalMode.Front); 
         await GDTask.ToSignal(delegateNode, AsyncDelegateNode.SignalName.Finished);
     }
 
     public static GDTask DelegatePhysicsProcess(Node node, Func<double, bool> action)
         => DelegateProcess(node, action, true);
+        
+    // wait a GDTask bind with internal node
 
     public static GDTask Wait(Node node, GDTask task, bool physics = false)
         => Delegate(node, () => task.Status.IsCompleted(), physics);
@@ -118,6 +127,8 @@ public static partial class Async
 
     public static GDTask WaitPhysicsProcess(Node node, GDTask task, Action<double> process)
         => WaitProcess(node, task, process, true);
+        
+    // wait a tween bind with internal node
 
     public partial class AsyncTweenNode : Node
     {
@@ -156,6 +167,7 @@ public static partial class Async
         tween.Pause();
         tween.BindNode(tweenNode);
 
+        tweenNode.BindParent(node);
         node.AddChild(tweenNode, false, Node.InternalMode.Front);
         await tweenNode.ToSignal(tweenNode, AsyncDelegateNode.SignalName.Finished);
     }
