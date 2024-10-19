@@ -1,18 +1,18 @@
-﻿using System.Threading.Tasks;
+﻿using GodotTask;
 
 namespace Godot;
 
 [GlobalClass]
 public partial class BTask: BTNode
 {
-    public virtual Task BTAsync()
+    public virtual GDTask BTAsync()
     {
-        return Task.Run(() => { });
+        return GDTask.RunOnThreadPool(() => {});
     }
 
-    private Task BTNodeTask { get; set; }
+    private GDTask BTNodeTask { get; set; }
 
     public override void BTReady() => BTNodeTask = BTAsync();
 
-    public override bool BTProcess(double delta) => BTNodeTask.IsCompleted;
+    public override bool BTProcess(double delta) => BTNodeTask.Status.IsCompleted();
 }
