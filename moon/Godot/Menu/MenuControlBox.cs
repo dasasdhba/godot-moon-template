@@ -38,7 +38,7 @@ public partial class MenuControlBox : MenuControl
         ContinuousDirTracker ??= new(Vector2I.Zero);
         if (ContinuousMoveTimer == null && ContinuousMoveDelay > 0d && ContinuousMoveInterval > 0d)
         {
-            ContinuousMoveTimer = new(ContinuousMoveDelay);
+            ContinuousMoveTimer = new(ContinuousMoveInterval);
         }
 
         if (disabled)

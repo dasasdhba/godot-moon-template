@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using GodotTask;
 using Component;
 using Utils;
 
@@ -113,7 +113,7 @@ public partial class MenuControl : Node
         ContinuousDirTracker ??= new(0);
         if (ContinuousMoveTimer == null && ContinuousMoveDelay > 0d && ContinuousMoveInterval > 0d)
         {
-            ContinuousMoveTimer = new(ContinuousMoveDelay);
+            ContinuousMoveTimer = new(ContinuousMoveInterval);
         }
 
         if (disabled)
@@ -197,7 +197,7 @@ public partial class MenuControl : Node
         }
     }
 
-    public async Task GuiAppear(MenuItem item = null)
+    public async GDTask GuiAppear(MenuItem item = null)
     {
         // update item
 
@@ -219,18 +219,18 @@ public partial class MenuControl : Node
         if (IsInstanceValid(Panel)) await Panel.Appear();
         else
         {
-            await Async.Wait(this, 0.1f);
+            await GDTask.Delay(0.1d);
             Disabled = false;
         }
     }
 
-    public async Task GuiDisappear()
+    public async GDTask GuiDisappear()
     {
         if (IsInstanceValid(Panel)) await Panel.Disappear();
         else
         {
             Disabled = true;
-            await Async.Wait(this, 0.1f);
+            await GDTask.Delay(0.1d);
         }
     }
 }
