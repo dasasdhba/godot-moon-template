@@ -15,6 +15,15 @@ config/features=PackedStringArray("4.3", "C#", "Mobile")
 boot_splash/show_image=false
 config/icon="res://system/icon.svg"
 
+[audio]
+
+buses/default_bus_layout="res://system/audio_bus.tres"
+
+[autoload]
+
+GDTask="*res://moon/GDTask/PlayerLoopRunner/GDTaskPlayerLoopRunner.cs"
+Moon="*res://system/singleton.tscn"
+
 [debug]
 
 gdscript/warnings/unused_parameter=0

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://kxkq1suvo5f"]
+
+[ext_resource type="Script" path="res://moon/Global/Save/SaveSingleton.cs" id="1_fht3d"]
+[ext_resource type="Script" path="res://moon/Global/Save/SaveItem.cs" id="2_7lxlk"]
+
+[node name="Save" type="Node"]
+script = ExtResource("1_fht3d")
+
+[node name="Global" type="Node" parent="."]
+script = ExtResource("2_7lxlk")

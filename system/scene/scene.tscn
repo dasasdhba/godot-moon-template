@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cwmaskb72gxbg"]
+
+[ext_resource type="Script" path="res://moon/Global/Scene/SceneSingleton.cs" id="1_khqih"]
+[ext_resource type="PackedScene" uid="uid://dvrui2k45hg5v" path="res://system/scene/color_trans.tscn" id="2_xbwgs"]
+
+[node name="Scene" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_khqih")
+ColorTrans = ExtResource("2_xbwgs")

@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://d1c5dfrgwllf6"]
+
+[node name="Pause" type="CanvasLayer"]
+layer = 120
