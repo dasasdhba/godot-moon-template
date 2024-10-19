@@ -2,7 +2,7 @@
 extends Control
 class_name FramesFill
 
-# we cannot use draw tiled with atlas
+# we cannot use tiled TextureRect with atlas
 # see https://github.com/godotengine/godot/issues/20472 for more details
 
 # current approach does not ignore the out view part
@@ -83,7 +83,7 @@ func _draw() ->void:
 		ts.y = -1
 	draw_set_transform(tp, 0, ts)
 	
-	var tex: Texture2D = frames.get_frame_texture(animation, count)
+	var tex :Texture2D = frames.get_frame_texture(animation, count)
 	var unit :Vector2 = tex.get_size()
 	var pos :Vector2i = Vector2i.ZERO
 	while pos.y * unit.y < size.y:
