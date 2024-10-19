@@ -1,6 +1,6 @@
 # Platformer2D
 
-`Platformer2D` provides a most common physics body implmentation for 2d platform games: General gravity (including underwater) simulation, moving and turning behavior, etc.
+`Platformer2D` provides a most common physics body implementation for 2d platform games: General gravity (including underwater) simulation, moving and turning behavior, etc.
 
 There are two implementations of `IPlatformer2D`--`CharaPlatformer2D` and `RigidPlatformer2D`, both of which can be manipulated by `PlatformerMove2D` node.
 

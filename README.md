@@ -6,4 +6,7 @@ A personal customized Godot is needed, see [Godot-Moon](https://github.com/dasas
 ## Plan list
 
 1. General Pause Singleton
-2. detailed documentation
+2. Mouse visible settings
+3. Separatable screen resolution support
+4. detailed documentation
+5. add more collections of Components and Shaders
