@@ -7,6 +7,9 @@ public partial class LabelScrollContainer : Control
 {
     [ExportCategory("LabelScrollContainer")]
     [Export]
+    public bool Disabled { get ;set; } = false;
+    
+    [Export]
     public float Sep { get ;set; } = 32f;
     
     [Export]
@@ -24,7 +27,15 @@ public partial class LabelScrollContainer : Control
         Label.AddChild(ShadowLabel);
         this.AddProcess((delta) =>
         {
+            if (Disabled) return;
+        
             var scroll = Label.Size.X > Size.X;
+            
+            if (ResetFlag)
+            {
+                Label.Position = Label.Position with { X = scroll ? ResetOffset : 0f };
+                ResetFlag = false;
+            }
 
             if (scroll)
             {
@@ -45,5 +56,14 @@ public partial class LabelScrollContainer : Control
             ShadowLabel.Position = new(Label.Size.X + Sep, 0f);
             ShadowLabel.Text = Label.Text;
         });
+    }
+    
+    private bool ResetFlag { get ;set; } = false;
+    private float ResetOffset { get ;set; } = 0f;
+
+    public void ResetScroll(float offset = 0f)
+    {
+        ResetFlag = true;
+        ResetOffset = offset;
     }
 }
