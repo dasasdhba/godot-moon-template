@@ -5,6 +5,5 @@ A personal customized Godot is needed, see [Godot-Moon](https://github.com/dasas
 
 ## Plan list
 
-1. General Music/Scene/Save/Pause Singleton
-2. Aseprite workflow
-3. detailed documentation
+1. General Pause Singleton
+2. detailed documentation

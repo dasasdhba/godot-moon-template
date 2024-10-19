@@ -37,6 +37,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="Moon"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/AsepriteImporter/plugin.cfg")
+
 [input]
 
 Up={
