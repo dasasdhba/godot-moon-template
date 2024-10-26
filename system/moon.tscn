@@ -1,0 +1,16 @@
+[gd_scene load_steps=5 format=3 uid="uid://dj88qlf54anc7"]
+
+[ext_resource type="Script" path="res://moon/Global/Moon.cs" id="1_j6naa"]
+[ext_resource type="PackedScene" uid="uid://kxkq1suvo5f" path="res://system/save.tscn" id="2_f0mlw"]
+[ext_resource type="PackedScene" uid="uid://dy7f884kvovld" path="res://system/music.tscn" id="3_yjy5u"]
+[ext_resource type="PackedScene" uid="uid://cwmaskb72gxbg" path="res://system/scene/scene.tscn" id="4_j6go4"]
+
+[node name="Moon" type="Node"]
+process_mode = 3
+script = ExtResource("1_j6naa")
+
+[node name="Save" parent="." instance=ExtResource("2_f0mlw")]
+
+[node name="Music" parent="." instance=ExtResource("3_yjy5u")]
+
+[node name="Scene" parent="." instance=ExtResource("4_j6go4")]

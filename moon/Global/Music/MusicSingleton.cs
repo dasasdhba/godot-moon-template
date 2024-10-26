@@ -12,7 +12,7 @@ public partial class MusicSingleton : Node
         => GetNodeOrNull<AudioStreamPlayer>(name)?.Play();
 
     public static void Play(string name)
-        => Singleton.Music.PlayGlobal(name);
+        => Moon.Music.PlayGlobal(name);
 
     /// <summary>
     /// Should not be altered in runtime.

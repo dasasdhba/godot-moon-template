@@ -42,7 +42,7 @@ public partial class SaveSingleton : Node
             config.SetValue("Setting", "Language", locale);
             foreach (string action in InputMap.GetActions())
             {
-                // 排除 build-in
+                // exclude build-in
                 if (action.StartsWith("ui"))
                     continue;
                 config.SetValue("Control", action, InputMap.ActionGetEvents(action));
@@ -66,7 +66,7 @@ public partial class SaveSingleton : Node
             TranslationServer.SetLocale((string)config.GetValue("Setting", "Language", "en"));
             foreach (string action in InputMap.GetActions())
             {
-                // 排除 build-in
+                // exclude build-in
                 if (action.StartsWith("ui") || !config.HasSectionKey("Control", action))
                     continue;
                 InputMap.ActionEraseEvents(action);
@@ -92,7 +92,7 @@ public partial class SaveSingleton : Node
         config.SetValue("Setting", "Language", TranslationServer.GetLocale());
         foreach (string action in InputMap.GetActions())
         {
-            // 排除 build-in
+            // exclude build-in
             if (action.StartsWith("ui"))
                 continue;
             config.SetValue("Control", action, InputMap.ActionGetEvents(action));

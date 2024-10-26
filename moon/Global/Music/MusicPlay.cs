@@ -1,6 +1,5 @@
 ﻿using Global;
 using Godot;
-using Godot.Collections;
 
 namespace Utils;
 
@@ -12,7 +11,12 @@ public partial class MusicPlay : Node
     public AudioStream Stream { get; set; }
 
     public enum MusicSettingMode
-    { Play, FadePlay, Stop, FadeStop }
+    {
+        Play,
+        FadePlay,
+        Stop,
+        FadeStop
+    }
 
     [Export]
     public MusicSettingMode SettingMode { get; set; } = MusicSettingMode.Play;
@@ -57,31 +61,31 @@ public partial class MusicPlay : Node
         };
     }
 
-    public bool IsPlaying() => Singleton.Music.IsPlaying(Stream, Channel);
+    public bool IsPlaying() => Moon.Music.IsPlaying(Stream, Channel);
 
     public void Play(bool reset, bool forceVolume = false)
     {
         if (!reset && IsPlaying())
             return;
 
-        Singleton.Music.SetVolume(Volume, Channel, forceVolume);
-        Singleton.Music.Play(Stream, Channel);
+        Moon.Music.SetVolume(Volume, Channel, forceVolume);
+        Moon.Music.Play(Stream, Channel);
     }
 
     public void Play() => Play(false);
 
-    public void Stop() => Singleton.Music.Stop(Channel);
+    public void Stop() => Moon.Music.Stop(Channel);
 
     public void FadePlay(bool reset, bool forceVolume = false)
     {
         if (!reset && IsPlaying())
             return;
 
-        Singleton.Music.SetVolume(Volume, Channel, forceVolume);
-        Singleton.Music.FadePlay(Stream, FadeTime, Channel);
+        Moon.Music.SetVolume(Volume, Channel, forceVolume);
+        Moon.Music.FadePlay(Stream, FadeTime, Channel);
     }
 
     public void FadePlay() => FadePlay(false);
 
-    public void FadeStop() => Singleton.Music.FadeStop(FadeTime, Channel);
+    public void FadeStop() => Moon.Music.FadeStop(FadeTime, Channel);
 }

@@ -8,7 +8,7 @@ public static partial class Globalvar
     
     public static int GlobalSavedInt
     {
-        get => (int)Singleton.Save.GetItemValue("Global", "SavedInt", 0);
-        set => Singleton.Save.SetItemValue("Global", "SavedInt", value);
+        get => (int)Moon.Save.GetItemValue("Global", "SavedInt", 0);
+        set => Moon.Save.SetItemValue("Global", "SavedInt", value);
     }
 }

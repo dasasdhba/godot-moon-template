@@ -3,9 +3,9 @@ using System;
 
 namespace Utils;
 
-// useful but uncategorized functions
+// useful but uncategorized extension functions
 
-public static class Moon
+public static class MoonExtensions
 {
     public static T FindParent<T>(this Node node, Func<T, bool> filter = null) where T : Node
     {
