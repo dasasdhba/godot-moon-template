@@ -22,7 +22,7 @@ buses/default_bus_layout="res://system/audio_bus.tres"
 [autoload]
 
 GDTask="*res://moon/GDTask/PlayerLoopRunner/GDTaskPlayerLoopRunner.cs"
-Moon="*res://system/singleton.tscn"
+Moon="*res://system/moon.tscn"
 
 [debug]
 
@@ -80,4 +80,6 @@ common/physics_interpolation=true
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="mobile"
+2d/snap/snap_2d_transforms_to_pixel=true
