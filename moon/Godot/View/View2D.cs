@@ -68,10 +68,10 @@ public partial class View2D : Node2D
 
     [ExportGroup("Shake")]
     [Export]
-    public double ShakeInterval { get ;set; } = 0.02d;
+    public double ShakeInterval { get ;set; } = 0.03d;
 
     [Export]
-    public Vector2 ShakeAmp { get ;set; } = new(4f, 4f);
+    public Vector2 ShakeAmp { get ;set; } = new(12f, 12f);
 
     [ExportGroup("Follow")]
     [Export]
@@ -218,7 +218,7 @@ public partial class View2D : Node2D
             ShakeIntervalTimer += delta;
             if (ShakeIntervalTimer >= ShakeInterval)
             {
-                ShakeIntervalTimer = 0d;
+                ShakeIntervalTimer -= ShakeInterval;
                 ShakeOffset = new Vector2(
                     Mathe.RandfRange(-ShakeAmp.X, ShakeAmp.X),
                     Mathe.RandfRange(-ShakeAmp.Y, ShakeAmp.Y)
