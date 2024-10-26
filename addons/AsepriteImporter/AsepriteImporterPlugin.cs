@@ -2,24 +2,22 @@
 
 using Godot;
 using Godot.Collections;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Editor.Addon;
 
 /// <summary>
-/// Aseprite Importer that generates useful resource while importing aseprite files.
-/// The aseprite resource itself is useless and can be removed
-/// if there is no need to reimport.
+/// Aseprite Importer that imports aseprite files as SpriteFrames
 /// </summary>
 [Tool]
 public partial class AsepriteImporterPlugin : EditorImportPlugin
 {
     public AsepriteImporterPlugin() : base() { }
 
-    // override implement
+    public override bool _CanImportThreaded()
+        => false;
+    
     public override string _GetImporterName()
         => "aseprite_importer.plugin";
 
@@ -131,7 +129,7 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
 
         // generate texture and json
         
-        System.Collections.Generic.List<AsepriteFrames.FramesInfo> infos = new();
+        List<AsepriteFrames.FramesInfo> infos = new();
 
         foreach (var file in GetRelevantFiles(sourceFile))
         {
@@ -173,10 +171,13 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
                     "Aseprite Exec Path in editor settings.");
                 return null;
             }
+            
+            var texPath = outFile["sprite_sheet"];
+            var jsonPath = outFile["data_file"];
 
             infos.Add(new AsepriteFrames.FramesInfo(
-                outFile["sprite_sheet"],
-                LoadJson(outFile["data_file"]),
+                texPath,
+                LoadJson(jsonPath),
                 GetAnimName(file),
                 loop,
                 tagOnly
@@ -184,13 +185,22 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
 
             // try import images
             
-            ResourceFilesystem.UpdateFile(outFile["sprite_sheet"]);
+            var imported = FileAccess.FileExists(texPath + ".import");
+            if (imported)
+            {
+                AsepriteImporter.Plugin.ScheduleScan();
+            }
+            else
+            {
+                ResourceFilesystem.UpdateFile(texPath);
+                AppendImportExternalResource(texPath);
+            }
             
             // remove json
             
             if (AsepriteConfig.GetRemoveJson())
             {
-                DirAccess.RemoveAbsolute(outFile["data_file"]);
+                DirAccess.RemoveAbsolute(jsonPath);
             }
         }
 

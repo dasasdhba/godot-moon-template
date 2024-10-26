@@ -8,7 +8,6 @@ namespace Editor.Addon;
 /// <summary>
 /// Manage Aseprite Importer editor config.
 /// </summary>
-[Tool]
 public partial class AsepriteConfig
 {
     private const string SectionKey = "aseprite";

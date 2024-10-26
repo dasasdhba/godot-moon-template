@@ -10,7 +10,6 @@ namespace Editor.Addon;
 /// <summary>
 /// Create SpriteFrames resource through aseprite json files.
 /// </summary>
-[Tool]
 public partial class AsepriteFrames
 {
     public struct FramesInfo
@@ -113,7 +112,7 @@ public partial class AsepriteFrames
                 iFrames = iFrames.Concat(frames[1..^1]);
         }
 
-        var texture = (Texture2D)GD.Load(info.TexPath);
+        var texture = GD.Load<Texture2D>(info.TexPath);
         texture.TakeOverPath(info.TexPath);
 
         System.Collections.Generic.Dictionary<Rect2, AtlasTexture> cachedTexture = new();

@@ -10,7 +10,6 @@ namespace Editor.Addon;
 /// <summary>
 /// Aseprite command line tool.
 /// </summary>
-[Tool]
 public partial class AsepriteCommand
 {
     private AsepriteConfig Config;
