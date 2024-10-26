@@ -7,6 +7,5 @@ A personal customized Godot is needed, see [Godot-Moon](https://github.com/dasas
 
 1. General Pause Singleton
 2. Mouse visible settings
-3. Separatable screen resolution support
-4. detailed documentation
-5. add more collections of Components and Shaders
+3. detailed documentation
+4. add more collections of Components and Shaders
