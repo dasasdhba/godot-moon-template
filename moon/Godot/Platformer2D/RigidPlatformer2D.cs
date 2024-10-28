@@ -158,7 +158,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     /// <summary>
     /// The real speed will be a litter slower than the set one
     /// due to the physics simulation of friction.
-    /// Setting friction to 0 is OK but we'll lost the simulation of moving blocks.
+    /// Setting friction to 0 is OK but we'll lose the simulation of moving blocks.
     /// </summary>
     public void SetMoveSpeed(float speed, bool updatePhysics = false)
     {
