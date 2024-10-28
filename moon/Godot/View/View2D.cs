@@ -316,5 +316,14 @@ public partial class View2D : Node2D
         
         GetTree().CallGroup("__cameras_" + view.GetViewportRid().Id,
              "_camera_moved", transform, size / 2f, -origin);
+             
+        // update view rect
+        
+        var topLeft = -transform.Origin / transform.Scale;
+        var viewSize = size / transform.Scale;
+        CurrentViewRect = new(topLeft, viewSize);
     }
+    
+    private Rect2 CurrentViewRect;
+    public Rect2 GetCurrentViewRect() => CurrentViewRect;
 }

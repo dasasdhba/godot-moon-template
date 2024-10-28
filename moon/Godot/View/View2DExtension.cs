@@ -7,45 +7,36 @@ namespace Godot;
 /// </summary>
 public static class View2DExtension
 {
-    public static void ViewShake(this CanvasItem item, double time = 0.1d)
-        => GetView2D(item).ShakeStart(time);
+    public static void ViewShake(this Node node, double time = 0.1d)
+        => node.GetView2D().ShakeStart(time);
 
-    public static void ViewShakeStop(this CanvasItem item)
-        => GetView2D(item).ShakeStop();
+    public static void ViewShakeStop(this Node node)
+        => node.GetView2D().ShakeStop();
         
     public static View2D GetView2D(this Node node)
-        => (View2D)node.GetViewport().GetMeta("ViewportView2D");
-
-    private static ulong LastPhysicsFrame = 0;
-    private static Viewport LastViewport;
-    private static Rect2 LastViewRect;
+        => node.GetViewport().GetMeta("ViewportView2D").As<View2D>();
 
     /// <summary>
-    /// Return the same in same viewport and physics frame if forceUpdate is not enabled.
+    /// Return the current view rect.
     /// </summary>
-    /// <param name="item">The CanvasItem to query.</param>
-    /// <param name="forceUpdate">Whether to use buffered result if available.</param>
-    public static Rect2 GetViewRect(this CanvasItem item, bool forceUpdate = false)
+    public static Rect2 GetViewRect(this Node node, bool forceUpdate = false)
     {
-        var physicsFrame = Engine.GetPhysicsFrames();
-        var viewport = item.GetViewport();
-
-        if (!forceUpdate && physicsFrame == LastPhysicsFrame && viewport == LastViewport)
+        if (!forceUpdate)
         {
-            return LastViewRect;
+            var view = node.GetView2D();
+            if (view is not null) return view.GetCurrentViewRect();
         }
 
-        LastPhysicsFrame = physicsFrame;
-        LastViewport = viewport;
+        if (node is CanvasItem item)
+        {
+            var canvas = item.GetCanvasTransform();
+            var topLeft = -canvas.Origin / canvas.Scale;
+            var size = item.GetViewportRect().Size / canvas.Scale;
+                    
+            return new(topLeft, size);
+        }
 
-        var canvas = item.GetCanvasTransform();
-        var topLeft = -canvas.Origin / canvas.Scale;
-        var size = item.GetViewportRect().Size / canvas.Scale;
-
-        Rect2 result = new(topLeft, size);
-        LastViewRect = result;
-
-        return result;
+        return default;
     }
 
     /// <summary>
