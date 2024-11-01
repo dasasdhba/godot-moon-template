@@ -45,7 +45,7 @@ public partial class PlatformerMove2D : Node
     public float DecSpeed { get ;set; } = 1000f;
     
     [Export]
-    public float TurnSpeed { get ;set; } = 1000f;
+    public float TurnDec { get ;set; } = 1000f;
     
     /// <summary>
     /// not recommend to close, especially for RigidBody
@@ -121,12 +121,12 @@ public partial class PlatformerMove2D : Node
                 if (Direction > 0)
                 {
                     speed = Speed >= 0f ? Mathe.Accelerate(Speed, AccSpeed, DecSpeed, MaxSpeed, delta) :
-                        Mathe.Accelerate(Speed, TurnSpeed, DecSpeed, 0d, delta);
+                        Mathe.Accelerate(Speed, TurnDec, DecSpeed, 0d, delta);
                 }
                 else if (Direction < 0)
                 {
                     speed = Speed <= 0f ? Mathe.Accelerate(Speed, DecSpeed, AccSpeed, -MaxSpeed, delta) :
-                        Mathe.Accelerate(Speed, DecSpeed, TurnSpeed, 0d, delta);
+                        Mathe.Accelerate(Speed, DecSpeed, TurnDec, 0d, delta);
                 }
                 else
                 {
@@ -139,5 +139,18 @@ public partial class PlatformerMove2D : Node
             
             platformer.SetMoveSpeed(Speed);
         }
+    }
+    
+    public bool IsMoving() => !IsStopping() && !IsTurning();
+    public bool IsStopping() => Direction == 0;
+
+    public bool IsTurning()
+    {
+        if (Platformer is IPlatformer2D platformer)
+        {
+            return Direction * platformer.GetLastMoveSpeed() < 0f;
+        }
+        
+        return false;
     }
 }
