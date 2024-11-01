@@ -141,13 +141,13 @@ public partial class SaveSingleton : Node
     public static Dictionary<string, Variant> LoadDict(string item)
         => LoadSectionDict(CurrentSection, item);
 
-    public static Variant LoadSectionItem(string section, string item, string key, Variant @default = default)
+    public static T LoadSectionItem<[MustBeVariant] T>(string section, string item, string key, T @default = default)
     {
         var savedDict = LoadSectionDict(section, item);
-        return savedDict.ContainsKey(key) ? savedDict[key] : @default;
+        return savedDict.ContainsKey(key) ? savedDict[key].As<T>() : @default;
     }
 
-    public static Variant LoadItem(string item, string key, Variant @default = default)
+    public static T LoadItem<[MustBeVariant] T>(string item, string key, T @default = default)
         => LoadSectionItem(CurrentSection, item, key, @default);
 
     #endregion
@@ -160,10 +160,10 @@ public partial class SaveSingleton : Node
     public void SetItemValue(string item, string key, Variant value)
         => GetItemDict(item)[key] = value;
 
-    public Variant GetItemValue(string item, string key, Variant @default = default)
+    public T GetItemValue<[MustBeVariant] T>(string item, string key, T @default = default)
     {
         var dict = GetItemDict(item);
-        return dict.ContainsKey(key) ? dict[key] : @default;
+        return dict.ContainsKey(key) ? dict[key].As<T>() : @default;
     }
 
     #endregion

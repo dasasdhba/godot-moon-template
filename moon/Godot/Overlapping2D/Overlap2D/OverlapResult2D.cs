@@ -34,7 +34,7 @@ public struct OverlapResult2D<T> where T : GodotObject
         return Collider.HasMeta(tag);
     }
 
-    public Variant GetData(string tag, Variant defaultValue = default)
+    public TT GetData<[MustBeVariant] TT>(string tag, TT defaultValue = default)
     {
         if (Collider is TileMap tilemap)
         {
@@ -43,7 +43,7 @@ public struct OverlapResult2D<T> where T : GodotObject
             var layer = tilemap.GetLayerForBodyRid(Rid);
             var coord = tilemap.GetCoordsForBodyRid(Rid);
             var data = tilemap.GetCellTileData(layer, coord);
-            return data.GetCustomData(tag);
+            return data.GetCustomData(tag).As<TT>();
         }
 
         if (Collider is TileMapLayer tilelayer)
@@ -52,9 +52,12 @@ public struct OverlapResult2D<T> where T : GodotObject
         
             var coord = tilelayer.GetCoordsForBodyRid(Rid);
             var data = tilelayer.GetCellTileData(coord);
-            return data.GetCustomData(tag);
+            return data.GetCustomData(tag).As<TT>();
         }
         
-        return Collider.GetMeta(tag, defaultValue);
+        if (Collider.HasMeta(tag))
+            return Collider.GetMeta(tag).As<TT>();
+            
+        return defaultValue;
     }
 }

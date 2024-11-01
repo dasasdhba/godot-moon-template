@@ -89,7 +89,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
         TreeEntered += () =>
         {
             WaterOverlap = OverlapSync2D.CreateFrom(this);
-            WaterOverlap.QueryParameters.CollisionMask = 1;
+            WaterOverlap.CollisionMask = 1;
             
             this.AddPhysicsProcess(delta =>
             {
@@ -127,7 +127,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
     public bool IsInWater(Vector2 offset)
     {
         return WaterOverlap.IsOverlapping(
-            result => (bool)result.GetData("Water", false),
+            result => result.GetData("Water", false),
             offset,
             true);
     }

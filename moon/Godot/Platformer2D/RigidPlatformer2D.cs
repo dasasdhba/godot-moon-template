@@ -107,7 +107,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     public bool IsInWater(Vector2 offset)
     {
         return WaterOverlap.IsOverlapping(
-            result => (bool)result.GetData("Water", false),
+            result => result.GetData("Water", false),
             offset,
             true);
     }
