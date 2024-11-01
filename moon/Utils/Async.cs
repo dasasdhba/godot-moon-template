@@ -7,6 +7,7 @@ namespace Utils;
 /// <summary>
 /// Async tools based on internal nodes.
 /// This can ensure that async functions stop when the node is freed.
+/// Also, this makes it easier to pause a node with async tasks.
 /// Though creating node costs a lot compared with native GDTask API.
 /// </summary>
 public static partial class Async

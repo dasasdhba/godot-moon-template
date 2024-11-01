@@ -219,7 +219,7 @@ public partial class MenuControl : Node
         if (IsInstanceValid(Panel)) await Panel.Appear();
         else
         {
-            await GDTask.Delay(0.1d);
+            await Async.Wait(this, 0.1d);
             Disabled = false;
         }
     }
@@ -230,7 +230,7 @@ public partial class MenuControl : Node
         else
         {
             Disabled = true;
-            await GDTask.Delay(0.1d);
+            await Async.Wait(this, 0.1d);
         }
     }
 }

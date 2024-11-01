@@ -1,4 +1,5 @@
 using GodotTask;
+using Utils;
 
 namespace Godot;
 
@@ -66,7 +67,7 @@ public partial class MenuPanel : Control
         
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 1f }, time);
-        await tween.AsGDTask();
+        await Async.Wait(this, tween);
     }
 
     public async GDTask Disappear()
@@ -80,7 +81,7 @@ public partial class MenuPanel : Control
     {
         var tween = CreateTween();
         tween.TweenProperty(this, "modulate", Modulate with { A = 0f }, time);
-        await tween.AsGDTask();
+        await Async.Wait(this, tween);
 
         Hide();
     }
