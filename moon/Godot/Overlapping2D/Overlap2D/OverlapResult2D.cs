@@ -4,7 +4,7 @@ namespace Godot;
 public struct OverlapResult2D<T> where T : GodotObject
 {
     public T Collider { get ;set; }
-    public int Id { get; set; }
+    public ulong Id { get; set; }
     public Rid Rid { get; set; }
     public int ShapeIndex { get ;set; }
 

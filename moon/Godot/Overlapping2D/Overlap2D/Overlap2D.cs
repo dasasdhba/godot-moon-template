@@ -1,12 +1,7 @@
 ﻿using System;
-using Godot.Collections;
 using System.Collections.Generic;
 
 namespace Godot;
-
-// This approach was proved to be slower than ShapeCast2D
-// but it's the most convenient way to do overlapping query so far
-// see more details in https://sampruden.github.io/posts/godot-is-not-the-new-unity/
 
 /// <summary>
 /// Base class of overlapping system.
@@ -105,10 +100,11 @@ public partial class Overlap2D
 
     public void SetCollisionMaskValue(int layer, bool value)
     {
-        int bit = value ? 1 : 0;
         int n = layer - 1;
-        uint mask = CollisionMask;
-        CollisionMask = (uint)(((mask & (1 << n)) ^ mask) ^ (bit << n));
+        int mask = (int)CollisionMask;
+        if (value) mask |= 1 << n;
+        else mask &= ~(1 << n);
+        CollisionMask = (uint)mask;
     }
 
     // exception
@@ -139,17 +135,17 @@ public partial class Overlap2D
         if (!PhysicsServer2D.SpaceIsActive(Space)) yield break;
 
         var query = SpaceState.IntersectShape(QueryParameters, MaxResults);
-        foreach (var dict in query)
+        for (int i = 0; i < query.GetCollisionCount(); i++)
         {
-            var col = (GodotObject)dict["collider"];
+            var col = query.GetCollider(i);
             if (col is T colt)
             {
                 var result = new OverlapResult2D<T>()
                 {
                     Collider = colt,
-                    Id = (int)dict["collider_id"],
-                    Rid = (Rid)dict["rid"],
-                    ShapeIndex = (int)dict["shape"]
+                    Id = query.GetColliderId(i),
+                    Rid = query.GetRid(i),
+                    ShapeIndex = query.GetShape(i)
                 };
 
                 if (filter == null || filter(result))
@@ -161,7 +157,7 @@ public partial class Overlap2D
             
             if (excludeOthers)
             {
-                AddException((Rid)dict["rid"]);
+                AddException(query.GetRid(i));
             }
         }
     }

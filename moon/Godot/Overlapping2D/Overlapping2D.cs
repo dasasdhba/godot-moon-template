@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Godot;
 
@@ -108,16 +109,16 @@ public abstract partial class Overlapping2D : Node
     public void RemoveException(CollisionObject2D col) => GetOverlapManager().RemoveException(col);
     public void RemoveException(Rid rid) => GetOverlapManager().RemoveException(rid);
     
-    public OverlapResult2D<GodotObject>[] GetOverlappingObjects(Func<OverlapResult2D<GodotObject>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false)
+    public IEnumerable<OverlapResult2D<GodotObject>> GetOverlappingObjects(Func<OverlapResult2D<GodotObject>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false)
         => GetOverlapManager().GetOverlappingObjects(filter, deltaPos, excludeOthers);
     
-    public OverlapResult2D<GodotObject>[] GetOverlappingObjects(Vector2 deltaPos = default)
+    public IEnumerable<OverlapResult2D<GodotObject>> GetOverlappingObjects(Vector2 deltaPos = default)
         => GetOverlapManager().GetOverlappingObjects(deltaPos);
     
-    public OverlapResult2D<T>[] GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
+    public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
         => GetOverlapManager().GetOverlappingObjects(filter, deltaPos, excludeOthers);
         
-    public OverlapResult2D<T>[] GetOverlappingObjects<T>(Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
+    public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
         => GetOverlapManager().GetOverlappingObjects<T>(deltaPos, excludeOthers);
     
     public bool IsOverlapping<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject

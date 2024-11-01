@@ -36,26 +36,28 @@ public abstract partial class OverlapManager2D : Overlap2D
         };
     }
     
-    public OverlapResult2D<T>[] GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
+    public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
     {
-        Dictionary<OverlapResult2D<T>, bool> hash = new();
+        List<OverlapResult2D<T>> results = new();
         foreach (var info in GetShapeInfos())
         {
             SetShapeInfo(info, deltaPos);
             foreach (var result in QueryOverlappingObjects(filter, excludeOthers))
             {
-                hash[result] = true;
+                if (!results.Contains(result))
+                {
+                    results.Add(result);
+                    yield return result;
+                }
             }
         }
-
-        return hash.Keys.ToArray();
     }
     
-    public OverlapResult2D<T>[] GetOverlappingObjects<T>(Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
+    public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
         => GetOverlappingObjects<T>(null, deltaPos, excludeOthers);
-    public OverlapResult2D<GodotObject>[] GetOverlappingObjects(Func<OverlapResult2D<GodotObject>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false)
+    public IEnumerable<OverlapResult2D<GodotObject>> GetOverlappingObjects(Func<OverlapResult2D<GodotObject>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false)
         => GetOverlappingObjects<GodotObject>(filter, deltaPos, excludeOthers);
-    public OverlapResult2D<GodotObject>[] GetOverlappingObjects(Vector2 deltaPos = default)
+    public IEnumerable<OverlapResult2D<GodotObject>> GetOverlappingObjects(Vector2 deltaPos = default)
         => GetOverlappingObjects<GodotObject>(null, deltaPos);
     
     public bool IsOverlapping<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
