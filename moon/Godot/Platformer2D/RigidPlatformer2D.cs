@@ -156,7 +156,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     public Vector2 GetMoveDirection() => GetGravityDirection().Orthogonal();
 
     /// <summary>
-    /// The real speed will be a litter slower than the set one
+    /// The real speed will be a little slower than the set one
     /// due to the physics simulation of friction.
     /// Setting friction to 0 is OK but we'll lose the simulation of moving blocks.
     /// </summary>
