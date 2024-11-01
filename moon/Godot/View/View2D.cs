@@ -68,6 +68,9 @@ public partial class View2D : Node2D
 
     [ExportGroup("Shake")]
     [Export]
+    public bool ShakeOutRegion { get ;set; } = false;
+    
+    [Export]
     public double ShakeInterval { get ;set; } = 0.03d;
 
     [Export]
@@ -95,10 +98,12 @@ public partial class View2D : Node2D
         ShakeIntervalTimer = 0d;
         ShakeOffset = Vector2.Zero;
     }
-
-    public Vector2 GetTargetPosition()
+    
+    public Vector2 GetTargetPosition() 
+        => GetTargetPosition(GlobalPosition + Offset);
+    
+    public Vector2 GetTargetPosition(Vector2 target)
     {
-        var target = GlobalPosition + Offset + ShakeOffset;
         var result = CenterPosition;
 
         if (Margin.End.X == 0f)
@@ -229,7 +234,9 @@ public partial class View2D : Node2D
 
         // view
 
-        var target = GetLimitPosition(GetTargetPosition());
+        var target = GetTargetPosition();
+        target = ShakeOutRegion ? GetLimitPosition(target) + ShakeOffset :
+            GetLimitPosition(target + ShakeOffset);
         var zoom = GetLimitZoom(Zoom);
         var rot = Rot;
 
