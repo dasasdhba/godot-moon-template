@@ -38,15 +38,26 @@ public abstract partial class OverlapManager2D : Overlap2D
     
     public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
     {
-        List<OverlapResult2D<T>> results = new();
-        foreach (var info in GetShapeInfos())
+        var infos = GetShapeInfos().ToArray();
+        if (infos.Length == 1)
+        {
+            SetShapeInfo(infos[0], deltaPos);
+            foreach (var result in QueryOverlappingObjects(filter, excludeOthers))
+            {
+                yield return result;
+            }
+            
+            yield break;
+        }
+
+        var hash = new HashSet<OverlapResult2D<T>>();
+        foreach (var info in infos)
         {
             SetShapeInfo(info, deltaPos);
             foreach (var result in QueryOverlappingObjects(filter, excludeOthers))
             {
-                if (!results.Contains(result))
+                if (hash.Add(result))
                 {
-                    results.Add(result);
                     yield return result;
                 }
             }
