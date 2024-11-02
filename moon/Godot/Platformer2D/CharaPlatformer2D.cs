@@ -205,10 +205,6 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
             moveSpeed = MoveSpeed;
             Velocity += moveDir * moveSpeed;
         }
-        
-        // Warning: we've modified godot's source so here needs delta param
-        // since we can implement speed transform easily with NodeU pattern
-        // but this will break Rapier Physics Engine for unknown reason
 
         if (MoveAndSlide(delta))
         {
