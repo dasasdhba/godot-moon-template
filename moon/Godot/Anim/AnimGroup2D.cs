@@ -33,6 +33,21 @@ public partial class AnimGroup2D : Node2D
     [Export]
     public bool FlipV { get ;set; } = false;
     
+    [Signal]
+    public delegate void AnimationChangedEventHandler();
+    
+    [Signal]
+    public delegate void AnimationFinishedEventHandler();
+    
+    [Signal]
+    public delegate void AnimationLoopedEventHandler();
+    
+    [Signal]
+    public delegate void FrameChangedEventHandler();
+    
+    [Signal]
+    public delegate void SpriteFramesChangedEventHandler();
+    
     public List<AnimatedSprite2D> Sprites { get ;set; } = [];
 
     public AnimGroup2D() : base()
@@ -53,11 +68,19 @@ public partial class AnimGroup2D : Node2D
             }
         };
         
-        TreeEntered += () =>
+        Ready += () =>
         {
             if (Autoplay != "") Play(Autoplay);
             UpdateSprites();
             this.AddProcess(UpdateSprites);
+            
+            if (Sprites.Count == 0) return;
+            
+            Sprites[0].AnimationChanged += () => EmitSignal(SignalName.AnimationChanged);
+            Sprites[0].AnimationFinished += () => EmitSignal(SignalName.AnimationFinished);
+            Sprites[0].AnimationLooped += () => EmitSignal(SignalName.AnimationLooped);
+            Sprites[0].FrameChanged += () => EmitSignal(SignalName.FrameChanged);
+            Sprites[0].SpriteFramesChanged += () => EmitSignal(SignalName.SpriteFramesChanged);
         };
     }
 
@@ -111,20 +134,20 @@ public partial class AnimGroup2D : Node2D
     }
     
     public string GetAnimation(int index = 0)
-       => Sprites[index].Animation;
+       => Sprites.Count == 0 ? "" : Sprites[index].Animation;
        
     public int GetFrame(int index = 0)
-       => Sprites[index].Frame;
+       => Sprites.Count == 0 ? 0 : Sprites[index].Frame;
        
     public float GetFrameProgress(int index = 0)
-       => Sprites[index].FrameProgress;
+       => Sprites.Count == 0 ? 0f : Sprites[index].FrameProgress;
        
     public SpriteFrames GetSpriteFrames(int index = 0)
-       => Sprites[index].SpriteFrames;
+       => Sprites.Count == 0 ? null : Sprites[index].SpriteFrames;
        
     public float GetPlayingSpeed(int index = 0)
-       => Sprites[index].GetPlayingSpeed();
+       => Sprites.Count == 0 ? 0f : Sprites[index].GetPlayingSpeed();
        
     public bool IsPlaying(int index = 0)
-       => Sprites[index].IsPlaying();
+       => Sprites.Count > 0 && Sprites[index].IsPlaying();
 }
