@@ -42,7 +42,7 @@ public abstract partial class Overlapping2D : Node
     }
     private bool _CollideWithBodies = true;
 
-    [Export(PropertyHint.Range, "0,100,0.01")]
+    [Export]
     public float Margin
     {
         get => _Margin;
