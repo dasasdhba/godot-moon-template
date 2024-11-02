@@ -8,10 +8,4 @@
   <ItemGroup>
     <Folder Include="addons\" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="addons\GDTask\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="addons\GDTask\**" />
-  </ItemGroup>
 </Project>
