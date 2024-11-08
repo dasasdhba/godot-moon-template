@@ -87,5 +87,5 @@ public partial class SceneSingleton : CanvasLayer
     }
 
     public void Reload(SceneTrans trans = null)
-        => ChangeTo("");
+        => ChangeTo("", trans);
 }
