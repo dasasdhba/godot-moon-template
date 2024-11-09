@@ -20,11 +20,6 @@ public partial class OverlappingSync2D : Overlapping2D
         {
             if (_SyncCollisionObject != value)
             {
-                if (ExcludeSyncObject && _SyncCollisionObject != null) 
-                { 
-                    OverlapObject.RemoveException(_SyncCollisionObject); 
-                }
-
                 _SyncCollisionObject = value;
                 OverlapObject.SyncObject = value;
             }
@@ -32,36 +27,12 @@ public partial class OverlappingSync2D : Overlapping2D
     }
     private CollisionObject2D _SyncCollisionObject;
 
-    [Export]
-    public bool ExcludeSyncObject
-    {
-        get => _ExcludeSyncObject;
-        set
-        {
-            if (_ExcludeSyncObject != value)
-            {
-                if (SyncCollisionObject != null)
-                {
-                    if (_ExcludeSyncObject) { OverlapObject.RemoveException(SyncCollisionObject); }
-                    else { OverlapObject.AddException(SyncCollisionObject); }
-                }
-
-                _ExcludeSyncObject = value;
-            }
-        }
-    }
-    private bool _ExcludeSyncObject = true;
-
     public OverlappingSync2D() : base()
     {
         TreeEntered += () =>
         { 
             OverlapObject.SyncObject = SyncCollisionObject;
-
-            if (ExcludeSyncObject && SyncCollisionObject != null)
-            {
-                OverlapObject.AddException(SyncCollisionObject);
-            }
+            OverlapObject.AddException(SyncCollisionObject);
         };
     }
 }
