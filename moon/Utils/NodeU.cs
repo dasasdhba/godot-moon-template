@@ -65,8 +65,8 @@ public static partial class NodeU
             ProcessAction = process,
             IsPhysics = isPhysics
         };
-
-        root.TreeExited += uNode.QueueFree;
+        
+        uNode.BindParent(root);
         root.AddChild(uNode, false, Node.InternalMode.Front);
 
         return uNode;
@@ -84,7 +84,6 @@ public static partial class NodeU
         };
         
         uNode.BindParent(root);
-        root.TreeExited += uNode.QueueFree;
         root.AddChild(uNode, false, Node.InternalMode.Front);
         
         return uNode;

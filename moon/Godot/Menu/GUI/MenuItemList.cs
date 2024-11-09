@@ -44,11 +44,12 @@ public partial class MenuItemList : Control
             if (child is MenuItemRect rect) ItemRects.Add(rect);
         };
         
+        TreeEntered += () => this.AddProcess(delta => Sort((float)(delta * SortRate)));
+        
         Ready += () =>
         {
             ItemRects.Sort(new RectComparer());
             Sort();
-            this.AddProcess(delta => Sort((float)(delta * SortRate)));
         };
     }
         

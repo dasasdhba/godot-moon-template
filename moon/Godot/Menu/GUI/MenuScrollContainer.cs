@@ -74,12 +74,9 @@ public partial class MenuScrollContainer : Control
 #if TOOLS
         if (Engine.IsEditorHint()) return;
 #endif   
-    
-        Ready += () =>
+
+        TreeEntered += () =>
         {
-            AddItemRects(this);
-            ForceUpdate();
-            
             this.AddProcess((delta) =>
             {
                 if (ScrollHorizontalRate > 0d)
@@ -96,6 +93,12 @@ public partial class MenuScrollContainer : Control
                         ScrollToY(y, delta * ScrollVerticalRate);
                 }
             }, () => ProcessCallback == MenuScrollContainerProcessCallback.Physics);
+        };
+    
+        Ready += () =>
+        {
+            AddItemRects(this);
+            ForceUpdate();
         };
     }
 

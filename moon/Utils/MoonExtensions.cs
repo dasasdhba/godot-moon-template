@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 namespace Utils;
 
@@ -17,6 +18,18 @@ public static class MoonExtensions
         }
         
         return null;
+    }
+    
+    public static IEnumerable<Node> GetChildrenRecursively(this Node node, bool includeInternal = false)
+    {
+        foreach (var child in node.GetChildren(includeInternal))
+        {
+            yield return child;
+            foreach (var c in child.GetChildrenRecursively(includeInternal))
+            {
+                yield return c;
+            }
+        }
     }
 
     public static void SetChildrenRecursively(this Node node, Action<Node> action, bool includeInternal = false)
@@ -38,5 +51,10 @@ public static class MoonExtensions
             if (node.GetParent() != parent)
                 node.QueueFree();
         };
+        
+        // HACK: this conflicts with object pooling
+        // though the performance issue may not be very serious
+        
+        parent.TreeExited += node.QueueFree;
     }
 }

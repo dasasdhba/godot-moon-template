@@ -68,11 +68,12 @@ public partial class AnimGroup2D : Node2D
             }
         };
         
+        TreeEntered += () => this.AddProcess(UpdateSprites);
+        
         Ready += () =>
         {
             if (Autoplay != "") Play(Autoplay);
             UpdateSprites();
-            this.AddProcess(UpdateSprites);
             
             if (Sprites.Count == 0) return;
             
