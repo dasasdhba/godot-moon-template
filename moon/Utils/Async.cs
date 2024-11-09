@@ -217,4 +217,20 @@ public static partial class Async
 
     public static GDTask WaitPhysics(Node node, Tween tween)
         => Wait(node, tween, true);
+        
+    // repeat timer, this will be more precise than multiple Wait calls
+
+    public static async GDTask Repeat(Node node, double time, int count, Action action, bool physics = false)
+    {
+        var timer = node.ActionRepeat(time, action, physics);
+        for (int i = 0; i < count; i++)
+        {
+            await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
+            action.Invoke();
+        }
+        timer.QueueFree();
+    }
+    
+    public static GDTask RepeatPhysics(Node node, double time, int count, Action action)
+        => Repeat(node, time, count, action, true);
 }
