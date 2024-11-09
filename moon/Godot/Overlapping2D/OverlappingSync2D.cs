@@ -20,8 +20,18 @@ public partial class OverlappingSync2D : Overlapping2D
         {
             if (_SyncCollisionObject != value)
             {
+                if (OverlapObject.SyncObject != null)
+                {
+                    OverlapObject.RemoveException(OverlapObject.SyncObject);
+                }
+                
                 _SyncCollisionObject = value;
                 OverlapObject.SyncObject = value;
+                
+                if (value != null)
+                {
+                    OverlapObject.AddException(value);
+                }
             }
         }
     }
@@ -30,7 +40,9 @@ public partial class OverlappingSync2D : Overlapping2D
     public OverlappingSync2D() : base()
     {
         TreeEntered += () =>
-        { 
+        {
+            if (SyncCollisionObject == null) return;
+            
             OverlapObject.SyncObject = SyncCollisionObject;
             OverlapObject.AddException(SyncCollisionObject);
         };
