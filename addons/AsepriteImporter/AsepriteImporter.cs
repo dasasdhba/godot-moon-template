@@ -65,7 +65,7 @@ public partial class AsepriteImporter : EditorPlugin
         if (ScanTimer <= 0d)
         {
             ScanScheduled = false;
-            ResourceFilesystem.CallDeferred("scan");
+            ResourceFilesystem.CallDeferred(EditorFileSystem.MethodName.Scan);
         }
     }
 }

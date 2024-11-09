@@ -24,7 +24,7 @@ public partial class SceneSingleton : CanvasLayer
         if (IsInstanceValid(TransTween)) TransTween.Kill();
 
         TransNode = trans.GetTransNode();
-        CallDeferred("add_child", TransNode);
+        CallDeferred(Node.MethodName.AddChild, TransNode);
         await GDTask.ToSignal(TransNode, Node.SignalName.Ready);
 
         TransTween = CreateTween();
@@ -68,7 +68,7 @@ public partial class SceneSingleton : CanvasLayer
 
     public string GetScenePath(string path)
     {
-        if (path == "" || path is null) return GetTree().CurrentScene.SceneFilePath;
+        if (path is null or "") return GetTree().CurrentScene.SceneFilePath;
         
         if (path.StartsWith('@'))
         {

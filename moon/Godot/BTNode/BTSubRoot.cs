@@ -43,7 +43,7 @@ public partial class BTSubRoot : BTNode
         if (IsInstanceValid(CachedNode)) return CachedNode;
 
         CachedNode = (BTNode)node.Duplicate();
-        Root.CallDeferred("add_sibling", CachedNode);
+        Root.CallDeferred(Node.MethodName.AddSibling, CachedNode);
         return CachedNode;
     }
 
