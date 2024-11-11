@@ -143,9 +143,7 @@ public partial class Overlap2D
                 var result = new OverlapResult2D<T>()
                 {
                     Collider = colt,
-                    Id = query.GetColliderId(i),
                     Rid = query.GetRid(i),
-                    ShapeIndex = query.GetShape(i)
                 };
 
                 if (filter == null || filter(result))
