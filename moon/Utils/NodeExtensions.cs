@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace Utils;
 
-// useful but uncategorized extension functions
+// useful node extension functions
 
-public static class MoonExtensions
+public static class NodeExtensions
 {
     public static T FindParent<T>(this Node node, Func<T, bool> filter = null) where T : Node
     {
@@ -18,6 +18,23 @@ public static class MoonExtensions
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// Bind internal node with parent. This prevents duplicate issues.
+    /// </summary>
+    public static void BindParent(this Node node, Node parent)
+    {
+        node.TreeEntered += () =>
+        {
+            if (node.GetParent() != parent)
+                node.QueueFree();
+        };
+        
+        // HACK: this conflicts with object pooling
+        // though the performance issue may not be very serious
+        
+        parent.TreeExited += node.QueueFree;
     }
     
     public static IEnumerable<Node> GetChildrenRecursively(this Node node, bool includeInternal = false)
@@ -39,22 +56,5 @@ public static class MoonExtensions
             action?.Invoke(child);
             SetChildrenRecursively(child, action, includeInternal);
         }
-    }
-    
-    /// <summary>
-    /// Bind internal node with parent. This prevents duplicate issues.
-    /// </summary>
-    public static void BindParent(this Node node, Node parent)
-    {
-        node.TreeEntered += () =>
-        {
-            if (node.GetParent() != parent)
-                node.QueueFree();
-        };
-        
-        // HACK: this conflicts with object pooling
-        // though the performance issue may not be very serious
-        
-        parent.TreeExited += node.QueueFree;
     }
 }
