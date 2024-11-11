@@ -57,4 +57,18 @@ public static class NodeExtensions
             SetChildrenRecursively(child, action, includeInternal);
         }
     }
+    
+    /// <summary>
+    /// if node is in pool, remove it from parent instead.
+    /// </summary>
+    public static void TryQueueFree(this Node node)
+    {
+        if (NodePool.IsInPool(node))
+        {
+            node.GetParent().CallDeferred(Node.MethodName.RemoveChild, node);
+            return;
+        }
+        
+        node.QueueFree();
+    }
 }
