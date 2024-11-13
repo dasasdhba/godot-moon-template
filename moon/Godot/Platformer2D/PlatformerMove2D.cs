@@ -61,7 +61,7 @@ public partial class PlatformerMove2D : Node
             ((string)property["name"] == "MaxSpeed" && !acc) ||
             ((string)property["name"] == "AccSpeed" && !acc) ||
             ((string)property["name"] == "DecSpeed" && !acc) ||
-            ((string)property["name"] == "TurnSpeed" && !acc) ||
+            ((string)property["name"] == "TurnDec" && !acc) ||
             ((string)property["name"] == "IgnorePhysics" && !acc)
         )
         {
