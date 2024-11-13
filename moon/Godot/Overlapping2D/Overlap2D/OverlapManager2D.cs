@@ -30,8 +30,10 @@ public abstract partial class OverlapManager2D : Overlap2D
     private void SetShapeInfo(ShapeInfo info, Vector2 deltaPos = default)
     {
         QueryParameters.Shape = info.Shape;
-        QueryParameters.Transform = info.Transform;
-        QueryParameters.Motion = deltaPos;
+        QueryParameters.Transform = info.Transform with
+        {
+            Origin = info.Transform.Origin + deltaPos
+        };
     }
     
     public IEnumerable<OverlapResult2D<T>> GetOverlappingObjects<T>(Func<OverlapResult2D<T>, bool> filter, Vector2 deltaPos = default, bool excludeOthers = false) where T : GodotObject
