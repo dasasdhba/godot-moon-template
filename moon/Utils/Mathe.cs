@@ -40,7 +40,7 @@ public static partial class Mathe
     }
     
     /// <summary>
-    /// <inheritdoc cref="BinarySearch(System.Func{double,bool},double)"/>>
+    /// <inheritdoc cref="BinarySearch(System.Func{double,bool},double)"/>
     /// </summary>
     public static float BinarySearch(Func<float, bool> search, float step = 256f)
     {
@@ -144,7 +144,7 @@ public static partial class Mathe
         => values.Min();
     
     // random
-    public static RandomNumberGenerator RNG { get ;set; }= new();
+    public static RandomNumberGenerator RNG { get ;set; } = new();
 
     /// <summary>
     /// 0~1 (inclusive)
