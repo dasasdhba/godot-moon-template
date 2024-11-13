@@ -115,7 +115,7 @@ public static partial class NodeU
 
         timer.SignalTimeout += () =>
         {
-            action.Invoke();
+            action?.Invoke();
             if (timer.OneShot)
                 timer.QueueFree();
         }; 
@@ -140,7 +140,7 @@ public static partial class NodeU
 
         timer.SignalTimeout += () =>
         {
-            action.Invoke();
+            action?.Invoke();
         }; 
         
         timer.BindParent(node);
