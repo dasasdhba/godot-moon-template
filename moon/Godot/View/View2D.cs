@@ -297,7 +297,7 @@ public partial class View2D : Node2D
         var size = GetViewportRect().Size;
         var zx = size.X / region.Size.X;
         var zy = size.Y / region.Size.Y;
-        return Math.Max(zy, Math.Max(zx, Math.Max(zoom, MinZoom)));
+        return Mathe.Max(zy, zx, zoom, MinZoom);
     }
 
     public float GetLimitZoom(float zoom) => GetLimitZoom(Region, zoom);

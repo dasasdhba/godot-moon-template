@@ -1,5 +1,6 @@
 ﻿using Godot;
 using System;
+using System.Linq;
 
 namespace Utils;
 
@@ -136,6 +137,12 @@ public static partial class Mathe
     public static Vector2 ClampDir(Vector2 dir, Vector2 normal, double spread)
         => Vector2.Right.Rotated((float)ClampAngle(dir.Angle(), normal.Angle(), spread));
 
+    public static T Max<T>(params T[] values) where T : IComparable<T>
+        => values.Max();
+    
+    public static T Min<T>(params T[] values) where T : IComparable<T>
+        => values.Min();
+    
     // random
     public static RandomNumberGenerator RNG { get ;set; }= new();
 
