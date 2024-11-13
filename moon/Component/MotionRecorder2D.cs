@@ -15,8 +15,8 @@ public partial class MotionRecorder2D : Node
     [Export]
     public bool Disabled { get ;set; } = false;
     
-    private Vector2 Speed = Vector2.Zero;
-    public Vector2 GetLastSpeed() => Speed;
+    private Vector2 Velocity = Vector2.Zero;
+    public Vector2 GetLastVelocity() => Velocity;
     
     private Vector2 Motion = Vector2.Zero;
     public Vector2 GetLastMotion() => Motion;
@@ -33,7 +33,7 @@ public partial class MotionRecorder2D : Node
             {
                 if (Disabled)
                 {
-                    Speed = Vector2.Zero;
+                    Velocity = Vector2.Zero;
                     Motion = Vector2.Zero;
                     FirstRecorded = false;
                     return;
@@ -49,7 +49,7 @@ public partial class MotionRecorder2D : Node
                 }
                 
                 Motion = pos - LastPosition;
-                Speed = Motion / (float)delta;
+                Velocity = Motion / (float)delta;
                 LastPosition = pos;
             });
         };
