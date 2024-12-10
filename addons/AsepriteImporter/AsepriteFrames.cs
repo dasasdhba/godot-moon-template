@@ -101,10 +101,10 @@ public partial class AsepriteFrames
         spr.SetAnimationLoop(animName, loop);
         spr.SetAnimationSpeed(animName, fps);
 
-        var reversed = direction == "reverse" || direction == "pingpong_reverse";
+        var reversed = direction is "reverse" or "pingpong_reverse";
         var iFrames = reversed ? frames.Reverse() : frames;
 
-        if (direction.StartsWith("pingpong"))
+        if (direction.StartsWith("pingpong") && frames.Length > 2)
         {
             if (!reversed)
                 iFrames = iFrames.Concat(frames[1..^1].Reverse());
