@@ -1,4 +1,5 @@
-﻿using Godot;
+﻿using Component;
+using Godot;
 using GodotTask;
 
 namespace Global;
@@ -9,6 +10,8 @@ public partial class SceneSingleton : CanvasLayer
     [ExportGroup("TransformLib")]
     [Export]
     public PackedScene ColorTrans { get ;set; }
+    
+    public AsyncLoader<ColorTransNode> ColorTransLoader { get ;set; }
 
     [Signal]
     public delegate void TransInEndedEventHandler();
@@ -16,9 +19,14 @@ public partial class SceneSingleton : CanvasLayer
     protected TransNode TransNode { get ;set; }
     protected Tween TransTween { get ;set; }
 
+    public override void _EnterTree()
+    {
+        ColorTransLoader = new(this, ColorTrans);
+    }
+
     public bool IsTrans() => IsInstanceValid(TransNode);
 
-    public async GDTaskVoid Trans(SceneTrans trans)
+    public async GDTask Trans(SceneTrans trans)
     {
         if (IsInstanceValid(TransNode)) TransNode.QueueFree();
         if (IsInstanceValid(TransTween)) TransTween.Kill();
