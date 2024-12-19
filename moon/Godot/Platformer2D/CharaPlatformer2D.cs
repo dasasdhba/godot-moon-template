@@ -59,6 +59,20 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
     [Export]
     public float SlopeFixSafeMargin { get; set; } = 4f;
 
+    [ExportGroup("Collision")]
+    [Export(PropertyHint.Layers2DPhysics)]
+    public uint WaterMask
+    {
+        get => _WaterMask;
+        set
+        {
+            _WaterMask = value;
+            WaterOverlap.CollisionMask = value;
+        }
+    }
+    
+    private uint _WaterMask = 1;
+
     [Signal]
     public delegate void FloorCollidedEventHandler();
 
@@ -89,7 +103,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
         TreeEntered += () =>
         {
             WaterOverlap = OverlapSync2D.CreateFrom(this);
-            WaterOverlap.CollisionMask = 1;
+            WaterOverlap.CollisionMask = WaterMask;
             
             this.AddPhysicsProcess(delta =>
             {

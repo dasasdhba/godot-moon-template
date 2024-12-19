@@ -53,6 +53,20 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     
     [Export]
     public float GravityFloatingDamp { get; set; } = 4f;
+    
+    [ExportGroup("Collision")]
+    [Export(PropertyHint.Layers2DPhysics)]
+    public uint WaterMask
+    {
+        get => _WaterMask;
+        set
+        {
+            _WaterMask = value;
+            WaterOverlap.CollisionMask = value;
+        }
+    }
+    
+    private uint _WaterMask = 1;
 
     [Signal]
     public delegate void RigidFrameEventHandler(PhysicsDirectBodyState2D state, double delta);
@@ -88,7 +102,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             // water detection
             
             WaterOverlap = OverlapSync2D.CreateFrom(this);
-            WaterOverlap.CollisionMask = 1;
+            WaterOverlap.CollisionMask = WaterMask;
         };
     }
 
