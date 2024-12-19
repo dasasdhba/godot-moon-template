@@ -14,7 +14,7 @@ public class ColorTrans : SceneTrans
 
     public override TransNode GetTransNode()
     {
-        var result = Moon.Scene.ColorTransLoader.Create();
+        var result = (ColorTransNode)Moon.Scene.TransLoader["Color"].Create();
         result.Color = Color;
         return result;
     }

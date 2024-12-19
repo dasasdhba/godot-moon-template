@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dvrui2k45hg5v"]
 
-[ext_resource type="Script" path="res://moon/Global/Scene/Lib/ColorTransNode.cs" id="1_2qrll"]
+[ext_resource type="Script" path="res://system/trans_lib/script/ColorTransNode.cs" id="1_2qrll"]
 [ext_resource type="Script" path="res://moon/Godot/TextureFill/color_fill.gd" id="2_6qg3x"]
 
 [node name="ColorTrans" type="Node"]
