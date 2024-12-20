@@ -37,7 +37,7 @@ public class AsyncLoader<T> where T : Node
 
         for (int i = 0; i < MaxCount; i++)
         {
-            LoadedNodes.Push(scene.Instantiate<T>());
+            AsyncLoad().Forget();
         }
         
         Root.TreeExited += () =>
