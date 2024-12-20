@@ -8,8 +8,6 @@ There are two implementations of `IPlatformer2D`--`CharaPlatformer2D` and `Rigid
 
 Any `body` (not `Area2D`) in `WaterMask` (default 1) layer with `metadata` (or `custom_data` for `TileSet`) `Water` set to be `true` will be treated as water area. To make the body floating in the water, set `FloatingHeight` to be positive.
 
-Hint: it's not recommended to change the collision layer of "Water Body", as the physics body may ignore it forever. Try to change the `WaterMask` of physics body instead, or simply move the water bodies away.
-
 ## Move and Turn
 
 A component `PlatformerMove2D` is used to implment general moving and turning behavior for `IPlatformer2D`. Both `Linear` and `Acclerate` mode are useful in many cases.

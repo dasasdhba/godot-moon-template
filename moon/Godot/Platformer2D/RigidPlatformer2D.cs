@@ -62,7 +62,8 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
         set
         {
             _WaterMask = value;
-            WaterOverlap.CollisionMask = value;
+            if (WaterOverlap != null)
+                WaterOverlap.CollisionMask = value;
         }
     }
     
