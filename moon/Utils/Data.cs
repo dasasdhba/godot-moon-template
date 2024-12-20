@@ -48,12 +48,42 @@ public static class Data
     /// If the obj is TileMap or TileMapLayer, this method checks custom layer data instead.
     /// To check the metadata, using HasMeta Instead.
     /// </summary>
-    /// <returns></returns>
     public static bool HasData(this GodotObject obj, string tag)
     {
         if (obj is TileMap tilemap) return tilemap.TileSet.HasCustomData(tag);
         if (obj is TileMapLayer tilelayer) return tilelayer.TileSet.HasCustomData(tag);
         return obj.HasMeta(tag);
+    }
+    
+    public static void RemoveCustomData(this TileSet tileset, string tag)
+    {
+        for (int i = 0; i < tileset.GetCustomDataLayersCount(); i++)
+        {
+            if (tileset.GetCustomDataLayerName(i) == tag)
+                tileset.RemoveCustomDataLayer(i);
+        }
+    }
+    
+    /// <summary>
+    /// If the obj is TileMap or TileMapLayer, this method removes custom layer data instead.
+    /// To remove the metadata, using RemoveMeta Instead.
+    /// </summary>
+    public static void RemoveData(this GodotObject obj, string tag)
+    {
+        if (obj is TileMap tilemap)
+        {
+            tilemap.TileSet.RemoveCustomData(tag);
+            return;
+        }
+
+        if (obj is TileMapLayer tilelayer)
+        {
+            tilelayer.TileSet.RemoveCustomData(tag);
+            return;
+        }
+        
+        if (obj.HasMeta(tag))
+            obj.RemoveMeta(tag);
     }
 
     public static T GetData<[MustBeVariant] T>(this GodotObject obj, string tag, T defaultValue = default)
