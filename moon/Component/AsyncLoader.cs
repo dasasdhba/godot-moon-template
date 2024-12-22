@@ -62,7 +62,7 @@ public class AsyncLoader<T> where T : Node
             if (LoadedNodes.Count == 0)
             {
             #if TOOLS
-                GD.PushWarning("AsyncLoader: All nodes are in use. Consider increasing MaxCount.");
+                GD.PushWarning($"AsyncLoader: All nodes are in use at {Root.Name} with {Scene.ResourcePath}. Consider increasing MaxCount.");
             #endif
                 return Scene.Instantiate<T>();
             }
