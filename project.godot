@@ -40,7 +40,7 @@ project/assembly_name="Moon"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/AsepriteImporter/plugin.cfg", "res://addons/brush2d/plugin.cfg", "res://addons/controller_icons/plugin.cfg")
+enabled=PackedStringArray("res://addons/AsepriteImporter/plugin.cfg", "res://addons/brush2d/plugin.cfg", "res://addons/controller_icons/plugin.cfg", "res://addons/texture_fonts/plugin.cfg")
 
 [input]
 
