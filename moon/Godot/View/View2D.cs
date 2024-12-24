@@ -27,7 +27,9 @@ public partial class View2D : Node2D
         }
     }
     private Rect2 _Region = new(Vector2.Zero, new(512f, 288f));
-
+    
+    public Rect2 GetRegion() => Region;
+    
     [ExportGroup("Transform")]
     [Export]
     public Rect2 Margin { get ;set; } = new(Vector2.Zero, Vector2.Zero);

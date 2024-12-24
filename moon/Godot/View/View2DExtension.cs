@@ -115,5 +115,86 @@ public static class View2DExtension
 
         return dir.X >= 0 ? IsInViewRight(item, eps, forceUpdate) : IsInViewLeft(item, eps, forceUpdate);
     }
+    
+    /// <summary>
+    /// Return the current view region
+    /// </summary>
+    public static Rect2 GetViewRegion(this Node node)
+    {
+        var view = node.GetView2D();
+        if (view is not null) return view.GetRegion();
 
+        return default;
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegion(this CanvasItem item, float eps = 0f)
+    {
+        var pos = (Vector2)item.Get("global_position");
+        return GetViewRegion(item).Grow(eps).HasPoint(pos);
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region left
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegionLeft(this CanvasItem item, float eps = 0f)
+    {
+        var pos = (Vector2)item.Get("global_position");
+        return GetViewRegion(item).Position.X - eps <= pos.X;
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region right
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegionRight(this CanvasItem item, float eps = 0f)
+    {
+        var pos = (Vector2)item.Get("global_position");
+        return GetViewRegion(item).End.X + eps >= pos.X;
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region top
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegionTop(this CanvasItem item, float eps = 0f)
+    {
+        var pos = (Vector2)item.Get("global_position");
+        return GetViewRegion(item).Position.Y - eps <= pos.Y;
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region bottom
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegionBottom(this CanvasItem item, float eps = 0f)
+    {
+        var pos = (Vector2)item.Get("global_position");
+        return GetViewRegion(item).End.Y + eps >= pos.Y;
+    }
+
+    /// <summary>
+    /// Whether the CanvasItem is in current view region with specific direction.
+    /// </summary>
+    /// <param name="item">The CanvasItem to query.</param>
+    /// <param name="dir">The direction to query.</param>
+    /// <param name="eps">Set positive to extend judging view, or negative to reduce.</param>
+    public static bool IsInViewRegionDir(this CanvasItem item, Vector2 dir, float eps = 0f)
+    {
+        if (Math.Abs(dir.Y) >= Math.Abs(dir.X))
+        {
+            return dir.Y >= 0 ? IsInViewRegionBottom(item, eps) : IsInViewRegionTop(item, eps);
+        }
+
+        return dir.X >= 0 ? IsInViewRegionRight(item, eps) : IsInViewRegionLeft(item, eps);
+    }
 }

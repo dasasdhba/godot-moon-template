@@ -11,6 +11,11 @@ public partial class ViewDestroyer : Node
     [Export]
     public CanvasItem MonitorNode { get; set; }
     
+    public enum ViewArea { Current, All }
+    
+    [Export]
+    public ViewArea Area { get; set; } = ViewArea.Current;
+    
     [Export]
     public bool Disabled { get; set; } = false;
     
@@ -74,6 +79,26 @@ public partial class ViewDestroyer : Node
 
         this.AddProcess(Process, () => ProcessCallback == ViewDestroyerProcessCallback.Physics);
     }
+    
+    private bool IsInAreaDir() => Area == ViewArea.Current ?
+        MonitorNode.IsInViewDir(Direction, Range) :
+        MonitorNode.IsInViewRegionDir(Direction, Range);
+        
+    private bool IsInAreaTop() => Area == ViewArea.Current ?
+        MonitorNode.IsInViewTop(UpRange) :
+        MonitorNode.IsInViewRegionTop(UpRange);
+        
+    private bool IsInAreaBottom() => Area == ViewArea.Current ?
+        MonitorNode.IsInViewBottom(DownRange) :
+        MonitorNode.IsInViewRegionBottom(DownRange);
+        
+    private bool IsInAreaLeft() => Area == ViewArea.Current ?
+        MonitorNode.IsInViewLeft(LeftRange) :
+        MonitorNode.IsInViewRegionLeft(LeftRange);
+    
+    private bool IsInAreaRight() => Area == ViewArea.Current ?
+        MonitorNode.IsInViewRight(RightRange) :
+        MonitorNode.IsInViewRegionRight(RightRange);
 
     public void Process()
     {
@@ -81,18 +106,18 @@ public partial class ViewDestroyer : Node
 
         if (Mode == MonitorMode.Direction)
         {
-            if (Range > 0f && !MonitorNode.IsInViewDir(Direction, Range))
+            if (Range > 0f && !IsInAreaDir())
                 MonitorNode.QueueFree();
             return;
         }
 
-        if (UpRange > 0f && !MonitorNode.IsInViewTop(UpRange))
+        if (UpRange > 0f && !IsInAreaTop())
             MonitorNode.QueueFree();
-        if (DownRange > 0f && !MonitorNode.IsInViewBottom(DownRange))
+        if (DownRange > 0f && !IsInAreaBottom())
             MonitorNode.QueueFree();
-        if (LeftRange > 0f && !MonitorNode.IsInViewLeft(LeftRange))
+        if (LeftRange > 0f && !IsInAreaLeft())
             MonitorNode.QueueFree();
-        if (RightRange > 0f && !MonitorNode.IsInViewRight(RightRange))
+        if (RightRange > 0f && !IsInAreaRight())
             MonitorNode.QueueFree();
     }
 
