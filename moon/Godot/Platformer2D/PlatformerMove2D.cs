@@ -14,6 +14,9 @@ public partial class PlatformerMove2D : Node
     public PhysicsBody2D Platformer { get ;set; }
     
     [Export]
+    public bool Disabled { get; set; } = false;
+    
+    [Export]
     public PlatformerMove2DTurnMode TurnMode { get;set; } = PlatformerMove2DTurnMode.Reverse;
 
     [ExportGroup("MovementSetting")]
@@ -95,7 +98,7 @@ public partial class PlatformerMove2D : Node
         if (Engine.IsEditorHint()) return;
 #endif
     
-        if (TurnMode == PlatformerMove2DTurnMode.None) return;
+        if (Disabled || TurnMode == PlatformerMove2DTurnMode.None) return;
         
         if (MoveMode == PlatformerMove2DMoveMode.Accelerate) Direction *= -1;
 
@@ -110,6 +113,8 @@ public partial class PlatformerMove2D : Node
 #if TOOLS 
         if (Engine.IsEditorHint()) return;
 #endif
+
+        if (Disabled) return;
         
         if (Platformer is IPlatformer2D platformer)
         {
