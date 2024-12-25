@@ -1,28 +1,122 @@
-using System;
 using System.Collections.Generic;
 using Godot;
 using GodotTask;
+using GodotTask.Triggers;
 
 namespace Component;
 
-public static class AsyncBackgroundLoader
+public class AsyncLoader
 {
-    public struct AsyncTask
+    private Node Root { get ;set; }
+    
+    private PackedScene Scene { get ;set; }
+    private string ScenePath { get ;set; }
+    
+    private int StackedCount { get ;set; }
+    private bool Dead { get; set; } = false;
+    
+    public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
     {
-        public PackedScene Scene { get ;set; }
-        public Stack<Node> TargetStack { get ;set; }
-        public object TargetLock { get ;set; }
-        public Func<bool> IsDead { get ;set; }
+        Root = root;
+        Scene = scene;
+        ScenePath = scene.ResourcePath;
+        
+        LoadedStackDict.TryAdd(ScenePath, new());
+        
+        AsyncInit(maxCount).Forget();
+        
+        Root.TreeExited += () => AsyncDead().Forget();
+    }
+
+    public Node Create()
+    {
+        Node result;
+        var loaded = LoadedStackDict[ScenePath];
+        lock (loaded.Lock)
+        {
+            if (loaded.Stack.Count == 0)
+            {
+            #if TOOLS
+                GD.PushWarning($"AsyncLoader: All nodes are in use at {Root.Name} with {Scene.ResourcePath}. Consider increasing MaxCount.");
+            #endif
+                lock (InstantiateLock)
+                {
+                    return Scene.Instantiate();
+                }
+            }
+            
+            result = loaded.Stack.Pop();
+            StackedCount--;
+        }
+        
+        AddCreateTask().Forget();
+        return result;
+    }
+
+    private async GDTaskVoid AddCreateTask(int count = 1)
+    {
+        await GDTask.RunOnThreadPool(() =>
+        {
+            var run = false;
+            
+            lock (TaskLock)
+            {
+                if (AsyncTasks.Count == 0) run = true;
+                
+                for (int i = 0; i < count; i++)
+                {
+                    AsyncTasks.Enqueue(this);
+                }
+            }
+            
+            if (run) AsyncLoad().Forget();
+        });
+    }
+
+    private async GDTaskVoid AsyncInit(int count)
+    {
+        await Root.OnReadyAsync();
+        AddCreateTask(count).Forget();
+    }
+
+    private async GDTaskVoid AsyncDead()
+    {
+        await GDTask.RunOnThreadPool(() =>
+        {
+            var loaded = LoadedStackDict[ScenePath];
+            lock (loaded.Lock)
+            {
+                Dead = true;
+
+                for (int i = 0; i < StackedCount; i++)
+                {
+                    var result = loaded.Stack.Pop();
+                    result.QueueFree();
+                }
+            }
+        });
     }
     
-    public static Stack<AsyncTask> AsyncTasks = new();
-    public static object TaskLock = new();
-    public static object InstantiateLock = new();
+    // static background loader
+    
+    private struct LoadedStack
+    {
+        public Stack<Node> Stack { get ;set; } = new();
+        public object Lock { get ;set; } = new();
+        
+        public LoadedStack() {}
+    }
+    
+    private static readonly Queue<AsyncLoader> AsyncTasks = new();
+    private static readonly object TaskLock = new();
+    private static readonly object InstantiateLock = new();
+    
+    private static readonly Dictionary<string, LoadedStack> LoadedStackDict = new();
     
     /// <summary>
-    /// Should be called once from game singleton.
+    /// Should be called for first task run.
     /// </summary>
-    public static async GDTaskVoid AsyncLoad()
+    private static async GDTaskVoid AsyncLoad()
     {
         await GDTask.RunOnThreadPool(() =>
         {
@@ -30,30 +124,35 @@ public static class AsyncBackgroundLoader
             {
                 lock (TaskLock)
                 {
-                    if (AsyncTasks.Count == 0) continue;
+                    if (AsyncTasks.Count == 0) return;
                     
-                    var task = AsyncTasks.Pop();
+                    var loader = AsyncTasks.Dequeue();
+                    var loaded = LoadedStackDict[loader.ScenePath];
                     
-                    lock (task.TargetLock)
+                    lock (loaded.Lock)
                     {
-                        if (task.IsDead()) continue;
+                        if (loader.Dead && loader.StackedCount >= 0) continue;
                     }
                     
                     Node result;
                     lock (InstantiateLock)
                     {
-                        result = task.Scene.Instantiate();
+                        result = loader.Scene.Instantiate();
                     }
 
-                    lock (task.TargetLock)
+                    lock (loaded.Lock)
                     {
-                        if (task.IsDead())
+                        if (loader.Dead && loader.StackedCount >= 0)
                         {
                             result.QueueFree();
                             continue;
                         }
-                        task.TargetStack.Push(result);
+                        
+                        loaded.Stack.Push(result);
+                        loader.StackedCount++;
                     }
+                    
+                    if (AsyncTasks.Count == 0) return;
                 }
             }
         });
@@ -62,79 +161,12 @@ public static class AsyncBackgroundLoader
 
 public class AsyncLoader<T> where T : Node
 {
-    private Node Root { get ;set; }
-    private PackedScene Scene { get ;set; }
-    private int MaxCount { get ;set; }
-    
-    private bool Dead { get; set; } = false;
-    
-    private Stack<Node> LoadedNodes = new(); 
-    private object StackLock = new();
-    
-    private AsyncBackgroundLoader.AsyncTask CreateTask;
+    private AsyncLoader Loader { get ;set; }
     
     public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
     {
-        Root = root;
-        Scene = scene;
-        MaxCount = maxCount;
-        
-        CreateTask = new()
-        {
-            Scene = scene,
-            TargetStack = LoadedNodes,
-            TargetLock = StackLock,
-            IsDead = () => Dead
-        };
-
-        for (int i = 0; i < MaxCount; i++)
-        {
-            AddCreateTask();
-        }
-        
-        Root.TreeExited += () =>
-        {
-            lock (StackLock)
-            {
-                Dead = true;
-
-                foreach (var node in LoadedNodes)
-                {
-                    node.QueueFree();
-                }
-                LoadedNodes.Clear();
-            }
-        };
+        Loader = new(root, scene, maxCount);
     }
-
-    public T Create()
-    {
-        lock (StackLock)
-        {
-            if (LoadedNodes.Count == 0)
-            {
-            #if TOOLS
-                GD.PushWarning($"AsyncLoader: All nodes are in use at {Root.Name} with {Scene.ResourcePath}. Consider increasing MaxCount.");
-            #endif
-                T result;
-                lock (AsyncBackgroundLoader.InstantiateLock)
-                {
-                    result = Scene.Instantiate<T>();
-                }
-                return result;
-            }
-            
-            var loaded = LoadedNodes.Pop();
-            AddCreateTask();
-            return (T)loaded;
-        }
-    }
-
-    private void AddCreateTask()
-    {
-        lock (AsyncBackgroundLoader.TaskLock)
-        {
-            AsyncBackgroundLoader.AsyncTasks.Push(CreateTask);
-        }
-    }
+    
+    public T Create() => (T)Loader.Create();
 }

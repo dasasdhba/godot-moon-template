@@ -8,7 +8,6 @@ public partial class Moon : Node
     public Moon() : base()
     {
         Singleton = this;
-        AsyncBackgroundLoader.AsyncLoad().Forget();
     }
     
     public static Moon Singleton { get ;set; }
