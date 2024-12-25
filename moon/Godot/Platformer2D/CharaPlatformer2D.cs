@@ -103,6 +103,8 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
     {
         TreeEntered += () =>
         {
+            SlideOnCeiling = false; // this is stupid
+            
             WaterOverlap = OverlapSync2D.CreateFrom(this);
             WaterOverlap.CollisionMask = WaterMask;
             
