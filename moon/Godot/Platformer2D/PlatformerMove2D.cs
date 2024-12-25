@@ -1,10 +1,11 @@
+using Component;
 using Godot.Collections;
 using Utils;
 
 namespace Godot;
 
 [GlobalClass, Tool]
-public partial class PlatformerMove2D : Node
+public partial class PlatformerMove2D : Node, IFlipInit
 {
     public enum PlatformerMove2DMoveMode { Linear, Accelerate }
     public enum PlatformerMove2DTurnMode { None, Reverse, Clear }
@@ -55,6 +56,15 @@ public partial class PlatformerMove2D : Node
     /// </summary>
     [Export]
     public bool IgnorePhysics { get; set; } = true;
+
+    public void FlipInit()
+    {
+        Speed *= -1f;
+        if (MoveMode == PlatformerMove2DMoveMode.Accelerate)
+        {
+            Direction *= -1;
+        }
+    }
     
     public override void _ValidateProperty(Dictionary property)
     {

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using Component;
 
 namespace Utils;
 
@@ -72,6 +73,24 @@ public static class NodeExtensions
         }
         
         node.QueueFree();
+    }
+
+    /// <summary>
+    /// Flip PlatformerMove2D or SpriteDir when init
+    /// </summary>
+    public static void TryInitFlip(this Node node)
+    {
+        if (node is IFlipInit flip) flip.FlipInit();
+    }
+    
+    /// <summary>
+    /// Flip All possible nodes when init
+    /// </summary>
+    /// <param name="node"></param>
+    public static void TryInitFlipAll(this Node node)
+    {
+        node.TryInitFlip();
+        node.SetChildrenRecursively(TryInitFlip);
     }
     
     #endregion
