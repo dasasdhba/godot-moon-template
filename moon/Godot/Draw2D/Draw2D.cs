@@ -7,7 +7,6 @@ namespace Godot;
 /// <summary>
 /// Provide a drawing workflow similar to Game Maker.
 /// </summary>
-[GlobalClass]
 public partial class Draw2D : Node2D
 {
     /// <summary>
@@ -48,8 +47,7 @@ public partial class Draw2D : Node2D
     public enum Draw2DProcessCallback
     {
         Idle,
-        Physics,
-        Manual
+        Physics
     }
 
     /// <summary>
@@ -128,6 +126,11 @@ public partial class Draw2D : Node2D
     protected void ClearAll()
     {
         ClearQueuedDraw();
+        ClearDrawSettings();
+    }
+
+    protected void ClearDrawSettings()
+    {
         ResetBlendMode();
         ResetDrawMaterial();
         ResetDrawModulate();
