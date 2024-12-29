@@ -226,7 +226,6 @@ public static partial class Async
         for (int i = 0; i < count; i++)
         {
             await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
-            action.Invoke();
         }
         timer.QueueFree();
     }
