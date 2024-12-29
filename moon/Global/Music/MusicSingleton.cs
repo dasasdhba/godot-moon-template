@@ -1,4 +1,5 @@
-﻿using Godot;
+﻿using System;
+using Godot;
 using System.Collections.Generic;
 
 namespace Global;
@@ -42,18 +43,22 @@ public partial class MusicSingleton : Node
             set => VolumeDb = Mathf.LinearToDb(value);
         }
 
-        public float FadeTime { get; set; } = 1f;
-        private double FadeTimer { get; set; } = 0f;
+        public double FadeTime { get; set; } = 1f;
+        private double FadeTimer = 0f;
         
         public int FadeDir { get; set; } = 0;
 
-        private float CachedVolume { get; set; } = 0f;
+        private float CachedVolume = 0f;
+        private bool FadePaused = false;
 
-        public void FadeIn()
+        public void SetVolume(float volume, bool force = false)
         {
-            FadeDir = 1;
-            FadeTimer = 0d;
-            CurrentVolume = 0f;
+            Volume = volume;
+            if (force || FadeDir == 0)
+            {
+                FadeDir = 0;
+                CurrentVolume = volume;
+            }
         }
 
         public void FadePlay(float pos = 0)
@@ -62,20 +67,59 @@ public partial class MusicSingleton : Node
             Play(pos);
         }
 
+        public void DirectPlay(float pos = 0)
+        {
+            FadeReset();
+            Play(pos);
+        }
+
         public void FadeStop()
         {
             if (!Playing) return;
 
+            FadeOut();
+            FadePaused = false;
+        }
+        
+        private void FadeIn()
+        {
+            FadeDir = 1;
+            FadeTimer = 0d;
+            CurrentVolume = 0f;
+        }
+
+        private void FadeOut()
+        {
             FadeDir = -1;
             FadeTimer = 0d;
             CachedVolume = CurrentVolume;
         }
 
-        public void FadeReset()
+        private void FadeReset()
         {
             FadeTimer = 0d;
             FadeDir = 0;
             CurrentVolume = Volume;
+        }
+        
+        public void Pause() => StreamPaused = true;
+        public void Resume() => StreamPaused = false;
+        public bool IsPaused() => StreamPaused;
+        
+        public void FadePause()
+        {
+            if (IsPaused()) return;
+            
+            FadeOut();
+            FadePaused = true;
+        }
+
+        public void FadeResume()
+        {
+            if (!IsPaused()) return;
+            
+            FadeIn();
+            Resume();
         }
 
         public override void _EnterTree()
@@ -88,16 +132,21 @@ public partial class MusicSingleton : Node
             if (FadeDir != 0)
             {
                 FadeTimer += delta;
+                
+                var p = (float)Math.Clamp(FadeTimer / FadeTime, 0f, 1f);
                 if (FadeDir == 1)
-                    CurrentVolume = (float)(FadeTimer / FadeTime * Volume);
+                    CurrentVolume = p * Volume;
                 else
-                    CurrentVolume = (float)((1f - FadeTimer / FadeTime) * CachedVolume);
+                    CurrentVolume = (1f - p) * CachedVolume;
 
                 if (FadeTimer >= FadeTime)
                 {
                     FadeTimer = 0f;
                     if (FadeDir == -1)
-                        Stop();
+                    {
+                        if (FadePaused) Pause();
+                        else Stop();
+                    }
                     FadeDir = 0;
                     CurrentVolume = Volume;
                 }
@@ -131,20 +180,14 @@ public partial class MusicSingleton : Node
 
     public void SetVolume(float volume, int channel = 0, bool force = false)
     {
-        Players[channel].Volume = volume;
-        if (force || Players[channel].FadeDir == 0)
-        {
-            Players[channel].FadeDir = 0;
-            Players[channel].CurrentVolume = volume;
-        }
+        Players[channel].SetVolume(volume, force);
     }
 
     public void Play(AudioStream stream, int channel = 0, float volume = 1f)
     {
         Players[channel].Stream = stream;
         Players[channel].Volume = volume;
-        Players[channel].FadeReset();
-        Players[channel].Play();
+        Players[channel].DirectPlay();
     }
 
     public void Stop(int channel = 0) => Players[channel].Stop();
@@ -155,9 +198,9 @@ public partial class MusicSingleton : Node
             Stop(i);
     }
 
-    public void Pause(int channel = 0) => Players[channel].StreamPaused = true;
-
-    public void Resume(int channel = 0) => Players[channel].StreamPaused = false;
+    public void Pause(int channel = 0) => Players[channel].Pause();
+    public void Resume(int channel = 0) => Players[channel].Resume();
+    public bool IsPaused(int channel = 0) => Players[channel].IsPaused();
 
     public void PauseAll()
     {
@@ -170,12 +213,20 @@ public partial class MusicSingleton : Node
         for (int i = 0; i < MaxChannel; i++)
             Resume(i);
     }
-
-    public void FadeIn(float fadetime = 1f, int channel = 0, float volume = 1f)
+    
+    public void FadePause(int channel = 0) => Players[channel].FadePause();
+    public void FadeResume(int channel = 0) => Players[channel].FadeResume();
+    
+    public void FadePauseAll()
     {
-        Players[channel].Volume = volume;
-        Players[channel].FadeTime = fadetime;
-        Players[channel].FadeIn();
+        for (int i = 0; i < MaxChannel; i++)
+            FadePause(i);
+    }
+
+    public void FadeResumeAll()
+    {
+        for (int i = 0; i < MaxChannel; i++)
+            FadeResume(i);
     }
 
     public void FadePlay(AudioStream stream, float fadetime = 1f, int channel = 0, float volume = 1f)
