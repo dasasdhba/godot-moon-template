@@ -108,6 +108,26 @@ public static class NodeExtensions
             body.GlobalTransform with { Origin = body.GlobalPosition + offset },
             Vector3.Zero
         );
+
+    public static bool TryPushOut(this PhysicsBody2D body, Vector2 motion)
+    {
+        if (body.IsOverlapping(motion)) return false;
+        
+        body.GlobalPosition += motion;
+        body.MoveAndCollide(-motion);
+
+        return true;
+    }
+    
+    public static bool TryPushOut(this PhysicsBody3D body, Vector3 motion)
+    {
+        if (body.IsOverlapping(motion)) return false;
+        
+        body.GlobalPosition += motion;
+        body.MoveAndCollide(-motion);
+
+        return true;
+    }
     
     #endregion
 }
