@@ -17,9 +17,19 @@ public class AsyncLoader
     
     public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
     {
-        Root = root;
         Scene = scene;
-        ScenePath = scene.ResourcePath;
+        InitWithPath(root, scene.ResourcePath, maxCount);
+    }
+
+    public AsyncLoader(Node root, string scenePath, int maxCount = 1)
+    {
+        InitWithPath(root, scenePath, maxCount);
+    }
+
+    private void InitWithPath(Node root, string scenePath, int maxCount = 1)
+    {
+        Root = root;
+        ScenePath = scenePath;
         
         LoadedStackDict.TryAdd(ScenePath, new());
         
@@ -76,6 +86,7 @@ public class AsyncLoader
     private async GDTaskVoid AsyncInit(int count)
     {
         await Root.OnReadyAsync();
+        Scene ??= GD.Load<PackedScene>(ScenePath);
         AddCreateTask(count).Forget();
     }
 
@@ -166,6 +177,11 @@ public class AsyncLoader<T> where T : Node
     public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
     {
         Loader = new(root, scene, maxCount);
+    }
+    
+    public AsyncLoader(Node root, string scenePath, int maxCount = 1)
+    {
+        Loader = new(root, scenePath, maxCount);
     }
     
     public T Create() => (T)Loader.Create();
