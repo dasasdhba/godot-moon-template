@@ -1,7 +1,9 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Component;
+using GodotTask;
 
 namespace Utils;
 
@@ -127,6 +129,62 @@ public static class NodeExtensions
         body.MoveAndCollide(-motion);
 
         return true;
+    }
+
+    private static async GDTask GetThroughAsync(this PhysicsBody2D body, CancellationToken ct)
+    {
+        var origin = body.CollisionMask;
+        body.CollisionMask = 0;
+        
+        bool isOverlapping()
+        {
+            body.CollisionMask = origin;
+            var result = body.IsOverlapping();
+            body.CollisionMask = 0;
+            return result;
+        }
+        
+        await Async.DelegatePhysics(body, () => isOverlapping(), ct);
+        await Async.DelegatePhysics(body, () => !isOverlapping(), ct);
+        
+        body.CollisionMask = origin;
+    }
+
+    public static TaskCanceller GetThrough(this PhysicsBody2D body)
+    {
+        var origin = body.CollisionMask;
+        return new(body.GetThroughAsync)
+        {
+            OnCancel = () => body.CollisionMask = origin
+        };
+    }
+    
+    private static async GDTask GetThroughAsync(this PhysicsBody3D body, CancellationToken ct)
+    {
+        var origin = body.CollisionMask;
+        body.CollisionMask = 0;
+        
+        bool isOverlapping()
+        {
+            body.CollisionMask = origin;
+            var result = body.IsOverlapping();
+            body.CollisionMask = 0;
+            return result;
+        }
+        
+        await Async.DelegatePhysics(body, () => isOverlapping(), ct);
+        await Async.DelegatePhysics(body, () => !isOverlapping(), ct);
+        
+        body.CollisionMask = origin;
+    }
+
+    public static TaskCanceller GetThrough(this PhysicsBody3D body)
+    {
+        var origin = body.CollisionMask;
+        return new(body.GetThroughAsync)
+        {
+            OnCancel = () => body.CollisionMask = origin
+        };
     }
     
     #endregion
