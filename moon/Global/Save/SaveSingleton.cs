@@ -18,10 +18,10 @@ public partial class SaveSingleton : Node
 
     #region FileAccess
 
-    public static string GetGamePath() 
-        => StringExtensions.GetBaseDir(OS.GetExecutablePath()) + "/";
+    private static string GetGamePath() 
+        => OS.GetExecutablePath().GetBaseDir();
 
-    public static string GetSavePath()
+    private static string GetSavePath()
         => GetGamePath() + "/" + SaveFileName + "." + SaveFileSuffix;
 
     // useful for temp save

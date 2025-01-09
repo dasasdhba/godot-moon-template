@@ -40,6 +40,7 @@ public partial class NodePool : Node
             if (!IsQueuedForDeletion()) return;
             
             foreach (var node in Pool) node.QueueFree();
+            Pool.Clear();
         };
     }
 

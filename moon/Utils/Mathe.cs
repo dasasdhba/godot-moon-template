@@ -68,24 +68,40 @@ public static partial class Mathe
         => Mathf.MoveToward(speed, max, speed < max ? acc * delta : dec * delta);
 
     /// <summary>
+    /// move to target in interval with closest direction
+    /// </summary>
+    public static double MoveTowardWrap(double current, double target, double min, double max, double delta)
+    {
+        var len = max - min;
+        var half = len / 2d;
+        while (current - target > half) target += len;
+        while (current - target < -half) target -= len;
+        return Mathf.MoveToward(current, target, delta);
+    }
+    
+    /// <summary>
+    /// <inheritdoc cref="MoveTowardWrap(double,double,double,double,double)"/>>
+    /// </summary>
+    public static float MoveTowardWrap(float current, float target, float min, float max, float delta)
+    {
+        var len = max - min;
+        var half = len / 2f;
+        while (current - target > half) target += len;
+        while (current - target < -half) target -= len;
+        return Mathf.MoveToward(current, target, delta);
+    }
+    
+    /// <summary>
     /// move an angle towards another one in closest direction
     /// </summary>
     public static double MoveTowardAngle(double current, double target, double delta)
-    {
-        while (current - target > double.Pi) target += double.Pi * 2f;
-        while (current - target < -double.Pi) target -= double.Pi * 2f;
-        return Mathf.MoveToward(current, target, delta);
-    }
+        => MoveTowardWrap(current, target, -double.Pi, double.Pi, delta);
     
     /// <summary>
     /// <inheritdoc cref="MoveTowardAngle(double,double,double)"/>>
     /// </summary>
     public static float MoveTowardAngle(float current, float target, float delta)
-    {
-        while (current - target > float.Pi) target += float.Pi * 2f;
-        while (current - target < -float.Pi) target -= float.Pi * 2f;
-        return Mathf.MoveToward(current, target, delta);
-    }
+        => MoveTowardWrap(current, target, -float.Pi, float.Pi, delta);
     
     /// <summary>
     /// move a direction vector towards another one by angle
@@ -98,38 +114,48 @@ public static partial class Mathe
     }
     
     /// <summary>
+    /// clamp a value in center ± spread range
+    /// </summary>
+    public static double ClampWrap(double value, double center, double spread, double min, double max)
+    {
+        var diff = Mathf.Wrap(center - value, min, max);
+        if (Math.Abs(diff) < spread) return Mathf.Wrap(value, min, max);
+
+        var smin = center - spread;
+        var smax = center + spread;
+        var dmin = Mathf.Wrap(smin - value, min, max);
+        var dmax = Mathf.Wrap(smax - value, min, max);
+        var result = Math.Abs(dmin) < Math.Abs(dmax) ? smin : smax;
+        return Mathf.Wrap(result, min, max);
+    }
+    
+    /// <summary>
+    /// <inheritdoc cref="ClampWrap(double,double,double,double,double)"/>>
+    /// </summary>
+    public static float ClampWrap(float value, float center, float spread, float min, float max)
+    {
+        var diff = Mathf.Wrap(center - value, min, max);
+        if (Math.Abs(diff) < spread) return Mathf.Wrap(value, min, max);
+
+        var smin = center - spread;
+        var smax = center + spread;
+        var dmin = Mathf.Wrap(smin - value, min, max);
+        var dmax = Mathf.Wrap(smax - value, min, max);
+        var result = Math.Abs(dmin) < Math.Abs(dmax) ? smin : smax;
+        return Mathf.Wrap(result, min, max);
+    }
+    
+    /// <summary>
     /// clamp an angle in center ± spread range
     /// </summary>
     public static double ClampAngle(double angle, double center, double spread)
-    {
-        angle = Mathf.Wrap(angle, -double.Pi, double.Pi);
-        center = Mathf.Wrap(center, -double.Pi, double.Pi);
-        double diff = Mathf.Wrap(center - angle, -double.Pi, double.Pi);
-        if (Math.Abs(diff) < spread) return angle;
-
-        var min = center - spread;
-        var max = center + spread;
-        var dmin = Mathf.Wrap(min - angle, -double.Pi, double.Pi);
-        var dmax = Mathf.Wrap(max - angle, -double.Pi, double.Pi);
-        return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
-    }
+        => ClampWrap(angle, center, spread, -double.Pi, double.Pi);
     
     /// <summary>
     /// <inheritdoc cref="ClampAngle(double,double,double)"/>>
     /// </summary>
     public static float ClampAngle(float angle, float center, float spread)
-    {
-        angle = Mathf.Wrap(angle, -float.Pi, float.Pi);
-        center = Mathf.Wrap(center, -float.Pi, float.Pi);
-        float diff = Mathf.Wrap(center - angle, -float.Pi, float.Pi);
-        if (Math.Abs(diff) < spread) return angle;
-
-        var min = center - spread;
-        var max = center + spread;
-        var dmin = Mathf.Wrap(min - angle, -float.Pi, float.Pi);
-        var dmax = Mathf.Wrap(max - angle, -float.Pi, float.Pi);
-        return Math.Abs(dmin) < Math.Abs(dmax) ? min : max;
-    }
+        => ClampWrap(angle, center, spread, -float.Pi, float.Pi);
     
     /// <summary>
     /// clamp a direction vector in normal.Rotate(±spread) range

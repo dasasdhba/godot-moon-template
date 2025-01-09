@@ -90,13 +90,16 @@ public partial class PlatformerMove2D : Node, IFlipInit
     
         TreeEntered += () =>
         {
+            this.AddPhysicsProcess(SetMoveSpeed);
+        };
+        
+        Ready += () =>
+        {
             if (Platformer is IPlatformer2D platformer)
             {
                 platformer.SignalWallCollided += () => Turn(platformer);
                 platformer.SetMoveSpeed(Speed, IsUpdatePhysics());
             }
-            
-            this.AddPhysicsProcess(SetMoveSpeed);
         };
     }
     

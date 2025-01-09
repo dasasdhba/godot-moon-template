@@ -20,7 +20,7 @@ public partial class MarkerFlipSync : Marker2D
     public bool FlipV { get; set; } = false;
     protected Vector2 Origin { get; set; }
 
-    public override void _EnterTree()
+    public override void _Ready()
     {
         Origin = Position;
         

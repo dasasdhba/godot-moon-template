@@ -51,7 +51,7 @@ public partial class Jumper : Node
         if (Engine.IsEditorHint()) return;            
     #endif
         
-        TreeEntered += () =>
+        Ready += () =>
         {
             if (Platformer is IPlatformer2D p)
             {

@@ -13,10 +13,8 @@ public partial class SaveSingleton : Node
     public static bool Effect { get ;set; } = true;
 
     private static string GetConfigPath()
-    {
-        string basePath = OS.GetExecutablePath().GetBaseDir();
-        return basePath + "/" + ConfigFileName + "." + ConfigFileSuffix;
-    }
+        => GetGamePath() + "/" + ConfigFileName + "." + ConfigFileSuffix;
+    
 
     public override void _Ready()
     {

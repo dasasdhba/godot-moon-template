@@ -85,17 +85,24 @@ public partial class Draw2D : Node2D
     {
         TreeEntered += () =>
         {
-            if (QueuedDrawers.Count > 0)
-                return;
-
+            this.AddProcess(ProcessDrawing, () => ProcessCallback == Draw2DProcessCallback.Physics);
+            
             for (int i = 0; i < MaxDrawingTask; i++)
             {
                 var drawer = new Drawer();
                 QueuedDrawers.Add(drawer);
                 AddChild(drawer);
             }
-
-            this.AddProcess(ProcessDrawing, () => ProcessCallback == Draw2DProcessCallback.Physics);
+        };
+        
+        TreeExited += () =>
+        {
+            foreach (var drawer in QueuedDrawers)
+            {
+                drawer.QueueFree();
+            }
+            
+            QueuedDrawers.Clear();
         };
 
     }

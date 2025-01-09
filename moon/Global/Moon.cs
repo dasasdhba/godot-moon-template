@@ -10,23 +10,14 @@ public partial class Moon : Node
         Singleton = this;
     }
     
-    public static Moon Singleton { get ;set; }
+    public static Moon Singleton { get ;private set; }
     
-    public static SaveSingleton Save
-    {
-        get => Singleton.GetNode<SaveSingleton>("Save");
-        private set { }
-    }
+    public static SaveSingleton Save 
+        => Singleton.GetNode<SaveSingleton>("Save");
 
-    public static MusicSingleton Music
-    {
-        get => Singleton.GetNode<MusicSingleton>("Music");
-        private set { }
-    }
+    public static MusicSingleton Music 
+        => Singleton.GetNode<MusicSingleton>("Music");
 
-    public static SceneSingleton Scene
-    {
-        get => Singleton.GetNode<SceneSingleton>("Scene");
-        private set { }
-    }
+    public static SceneSingleton Scene 
+        => Singleton.GetNode<SceneSingleton>("Scene");
 }

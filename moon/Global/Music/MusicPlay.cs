@@ -39,26 +39,31 @@ public partial class MusicPlay : Node
         {
             if (Autoplay)
             {
-                switch (SettingMode)
-                {
-                    case MusicSettingMode.Play:
-                        Play();
-                        break;
-
-                    case MusicSettingMode.FadePlay:
-                        FadePlay();
-                        break;
-
-                    case MusicSettingMode.Stop:
-                        Stop();
-                        break;
-
-                    case MusicSettingMode.FadeStop:
-                        FadeStop();
-                        break;
-                }
+                Apply();
             }
         };
+    }
+
+    public void Apply()
+    {
+        switch (SettingMode)
+        {
+            case MusicSettingMode.Play:
+                Play();
+                break;
+
+            case MusicSettingMode.FadePlay:
+                FadePlay();
+                break;
+
+            case MusicSettingMode.Stop:
+                Stop();
+                break;
+
+            case MusicSettingMode.FadeStop:
+                FadeStop();
+                break;
+        }
     }
 
     public bool IsPlaying() => Moon.Music.IsPlaying(Stream, Channel);

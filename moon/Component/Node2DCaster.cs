@@ -23,9 +23,12 @@ public partial class Node2DCaster : Node
     
     public AsyncLoader<Node2D> Node2DLoader { get ;set; }
 
-    public override void _EnterTree()
+    public Node2DCaster() : base()
     {
-        Node2DLoader = new AsyncLoader<Node2D>(this, Node2DScene, BufferCount);
+        TreeEntered += () =>
+        {
+            Node2DLoader = new(this, Node2DScene, BufferCount);
+        };
     }
 
     public void Cast()

@@ -81,10 +81,9 @@ public abstract partial class Overlapping2D : Node
     // init
     public Overlapping2D() : base()
     {
-        var manager = GetOverlapManager();
-
         TreeEntered += () =>
         {
+            var manager = GetOverlapManager();
             manager.CollideWithAreas = CollideWithAreas;
             manager.CollideWithBodies = CollideWithBodies;
             manager.Margin = Margin;

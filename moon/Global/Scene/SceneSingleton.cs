@@ -2,6 +2,7 @@
 using Godot;
 using Godot.Collections;
 using GodotTask;
+using GodotTask.Triggers;
 
 namespace Global;
 
@@ -36,7 +37,7 @@ public partial class SceneSingleton : CanvasLayer
 
         TransNode = trans.GetTransNode();
         CallDeferred(Node.MethodName.AddChild, TransNode);
-        await GDTask.ToSignal(TransNode, Node.SignalName.Ready);
+        await TransNode.OnReadyAsync();
 
         TransTween = CreateTween();
         if (trans.InTime > 0d)

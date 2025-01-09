@@ -1,4 +1,5 @@
 using Godot;
+using Utils;
 
 namespace Component;
 
@@ -31,9 +32,10 @@ public partial class SpriteDir : Node, IFlipInit
     public override void _EnterTree()
     {
         if (Sprite == null && GetParent() is CanvasItem parent) Sprite = parent;
-        if (Root != null && Root is not IPlatformer2D)
+        if (Recorder == null && Root != null && Root is not IPlatformer2D)
         {
             Recorder = new() { Target = Root };
+            Recorder.BindParent(this);
             AddChild(Recorder);
         }
     }

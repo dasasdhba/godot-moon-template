@@ -35,22 +35,20 @@ public partial class UTimer : Node
 
     private void TimerProcess(double delta)
     {
-        if (Paused) return;
-        if (Active)
+        if (Paused || !Active) return;
+        
+        TimeLeft -= delta;
+        if (TimeLeft <= 0d)
         {
-            TimeLeft -= delta;
-            if (TimeLeft <= 0d)
-            {
-                EmitSignal(SignalName.Timeout);
+            EmitSignal(SignalName.Timeout);
 
-                if (!OneShot)
-                {
-                    TimeLeft += WaitTime;
-                }
-                else
-                {
-                    Active = false;
-                }
+            if (!OneShot)
+            {
+                TimeLeft += WaitTime;
+            }
+            else
+            {
+                Active = false;
             }
         }
     }
