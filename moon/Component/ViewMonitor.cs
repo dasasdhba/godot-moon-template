@@ -6,7 +6,7 @@ namespace Component;
 [GlobalClass, Tool]
 public partial class ViewMonitor : Node
 {
-    [ExportCategory("ViewDestroyer")]
+    [ExportCategory("ViewMonitor")]
     [Export]
     public CanvasItem MonitorNode { get; set; }
     

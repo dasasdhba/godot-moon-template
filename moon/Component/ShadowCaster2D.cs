@@ -225,9 +225,11 @@ public partial class ShadowCaster2D : Node
             for (int i = 0; i < ShadowQueues.Length; i++)
             {
                 var item = ShadowQueues[i].Dequeue();
-                if (item.Init(Counter++)) WorkingQueues[i].Enqueue(item);
+                if (item.Init(Counter)) WorkingQueues[i].Enqueue(item);
                 else ShadowQueues[i].Enqueue(item);
             }
+            
+            Counter++;
         }
         
         private int Counter;
