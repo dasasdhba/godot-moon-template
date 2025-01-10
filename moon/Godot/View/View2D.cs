@@ -169,7 +169,7 @@ public partial class View2D : Node2D
     {
         if (IsInstanceValid(FollowNode))
         {
-            GlobalPosition = (Vector2)FollowNode.Get("global_position") + FollowOffset;
+            GlobalPosition = (Vector2)FollowNode.Get(Node2D.PropertyName.GlobalPosition) + FollowOffset;
         }
 
         CurrentZoom = GetLimitZoom(Zoom);
@@ -214,7 +214,7 @@ public partial class View2D : Node2D
 
         if (IsInstanceValid(FollowNode))
         {
-            GlobalPosition = (Vector2)FollowNode.Get("global_position") + FollowOffset;
+            GlobalPosition = (Vector2)FollowNode.Get(Node2D.PropertyName.GlobalPosition) + FollowOffset;
         }
 
         // shake

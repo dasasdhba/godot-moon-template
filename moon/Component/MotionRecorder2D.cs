@@ -39,7 +39,7 @@ public partial class MotionRecorder2D : Node
                     return;
                 }
                 
-                var pos = (Vector2)Target.Get("global_position");
+                var pos = (Vector2)Target.Get(Node2D.PropertyName.GlobalPosition);
 
                 if (!FirstRecorded)
                 {
