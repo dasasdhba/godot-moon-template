@@ -1,5 +1,5 @@
 @tool
-extends Resource
+extends Node
 class_name ControllerSettings
 
 enum Devices {

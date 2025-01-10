@@ -111,7 +111,7 @@ func _parse_input_actions():
 
 func _ready():
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-	_settings = load("res://addons/controller_icons/settings.tres")
+	_settings = load("res://addons/controller_icons/settings.tscn").instantiate()
 	if not _settings:
 		_settings = ControllerSettings.new()
 	if _settings.custom_mapper:
