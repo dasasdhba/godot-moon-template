@@ -63,23 +63,13 @@ public partial class Draw2D : Node2D
     [Export]
     public bool VisibleOnly { get; set; } = true;
 
-    private List<Action<Drawer>> QueuedDrawingTasks = new();
-    protected List<Drawer> QueuedDrawers { get ;set; } = new();
+    private List<Action<Rid>> QueuedDrawingTasks = new();
+    protected List<Rid> QueuedDrawers { get ;set; } = new();
 
     /// <summary>
     /// Clear all the queued drawing tasks.
     /// </summary>
     protected void ClearQueuedDraw() => QueuedDrawingTasks.Clear();
-
-    /// <summary>
-    /// Managed by Draw2D, deal with specific drawing task.
-    /// </summary>
-    protected partial class Drawer : Node2D
-    {
-        public Action DrawingTask { get; set; }
-
-        public override void _Draw() => DrawingTask?.Invoke();
-    }
 
     public Draw2D() : base()
     {
@@ -89,9 +79,9 @@ public partial class Draw2D : Node2D
             
             for (int i = 0; i < MaxDrawingTask; i++)
             {
-                var drawer = new Drawer();
+                var drawer = RenderingServer.CanvasItemCreate();
+                RenderingServer.CanvasItemSetParent(drawer, GetCanvasItem());
                 QueuedDrawers.Add(drawer);
-                AddChild(drawer);
             }
         };
         
@@ -99,7 +89,7 @@ public partial class Draw2D : Node2D
         {
             foreach (var drawer in QueuedDrawers)
             {
-                drawer.QueueFree();
+                RenderingServer.FreeRid(drawer);
             }
             
             QueuedDrawers.Clear();
@@ -115,18 +105,17 @@ public partial class Draw2D : Node2D
     {
         for (int i = 0; i < QueuedDrawers.Count; i++)
         {
+            var drawer = QueuedDrawers[i];
+            
             if (i >= QueuedDrawingTasks.Count)
             {
-                if (!QueuedDrawers[i].Visible)
-                    break;
-
-                QueuedDrawers[i].Hide();
+                RenderingServer.CanvasItemSetVisible(drawer, false);
                 continue;
             }
-
-            QueuedDrawingTasks[i].Invoke(QueuedDrawers[i]);
-            QueuedDrawers[i].Show();
-            QueuedDrawers[i].QueueRedraw();
+            
+            RenderingServer.CanvasItemClear(drawer);
+            RenderingServer.CanvasItemSetVisible(drawer, true);
+            QueuedDrawingTasks[i].Invoke(drawer);
         }
     }
 

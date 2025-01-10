@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace Godot;
 
@@ -85,34 +86,44 @@ public partial class Draw2D : Node2D
     protected void SetDrawZIndex(int zIndex) => DrawZIndex = zIndex;
     protected void ResetDrawZIndex() => DrawZIndex = 0;
 
-    protected void AddDrawingTask(Action<Drawer> task)
+    protected void AddDrawingTask(Action<Rid> task)
     {
-        var QueuedMaterial = DrawMaterial ?? BlendMaterialMap[BlendMode];
-        var QueuedModulate = DrawModulate;
-        var QueuedTransform = DrawTransform;
-        var QueuedGlobal = DrawGlobal;
-        int QueuedZIndex = DrawZIndex;
-
-        QueuedDrawingTasks.Add((Drawer drawer) =>
+        var queuedMaterial = (DrawMaterial ?? BlendMaterialMap[BlendMode]).GetRid();
+        var queuedModulate = DrawModulate;
+        int queuedZIndex = DrawZIndex;
+        
+        var queuedTransform = DrawTransform;
+        var scale = queuedTransform.Scale;
+        var position = queuedTransform.Origin;
+        
+        if (FlipH)
         {
-            drawer.Material = QueuedMaterial;
-            drawer.Modulate = QueuedModulate;
-            if (QueuedGlobal) drawer.GlobalTransform = QueuedTransform;
-            else drawer.Transform = QueuedTransform;
-            drawer.ZIndex = QueuedZIndex;
-            drawer.Position += Offset;
-            if (FlipH)
-            {
-                drawer.Scale = drawer.Scale with { X = drawer.Scale.X * -1f };
-                drawer.Position = drawer.Position with { X = drawer.Position.X * -1f };
-            }
-            if (FlipV)
-            {
-                drawer.Scale = drawer.Scale with { Y = drawer.Scale.Y * -1f };
-                drawer.Position = drawer.Position with { Y = drawer.Position.Y * -1f };
-            }
-            drawer.ForceUpdateTransform();
-            drawer.DrawingTask = () => task(drawer);
+            scale.X *= -1f;
+            position.X *= -1f;
+        }
+
+        if (FlipV)
+        {
+            scale.Y *= -1f;
+            position.Y *= -1f;
+        }
+        
+        queuedTransform = new(queuedTransform.Rotation, scale,
+            queuedTransform.Skew, position + Offset);
+
+        if (DrawGlobal)
+        {
+            queuedTransform = GlobalTransform.AffineInverse() * queuedTransform;
+        }
+
+        QueuedDrawingTasks.Add((drawer) =>
+        {
+            RenderingServer.CanvasItemSetMaterial(drawer, queuedMaterial);
+            RenderingServer.CanvasItemSetModulate(drawer, queuedModulate);
+            RenderingServer.CanvasItemSetZIndex(drawer, queuedZIndex);
+            RenderingServer.CanvasItemSetTransform(drawer, queuedTransform);
+            
+            task.Invoke(drawer);
         });
     }
 
@@ -124,31 +135,34 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawLine(Vector2 from, Vector2 to, Color color, 
         float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawLine(from, to, color, width, antialiased);
+            RenderingServer.CanvasItemAddLine(drawer, from, to, color, width, antialiased);
         });
     }
     
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawMultiline(Vector2[], Color, float)"/>
     /// </summary>
-    protected void QueuedDrawMultiline(Vector2[] points, Color color, float width = -1f)
+    protected void QueuedDrawMultiline(Vector2[] points, Color color, float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        var colors = new Color[points.Length - 1];
+        Array.Fill(colors, color);
+        
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawMultiline(points, color, width);
+            RenderingServer.CanvasItemAddMultiline(drawer, points, colors, width, antialiased);
         });
     }
     
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawMultilineColors(Vector2[], Color[], float)"/>
     /// </summary>
-    protected void QueuedDrawMultilineColors(Vector2[] points, Color[] colors, float width = -1f)
+    protected void QueuedDrawMultilineColors(Vector2[] points, Color[] colors, float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawMultilineColors(points, colors, width);
+            RenderingServer.CanvasItemAddMultiline(drawer, points, colors, width, antialiased);
         });
     }
     
@@ -158,9 +172,12 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawPolyline(Vector2[] points, Color color,
         float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        var colors = new Color[points.Length];
+        Array.Fill(colors, color);
+    
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawPolyline(points, color, width, antialiased);
+            RenderingServer.CanvasItemAddPolyline(drawer, points, colors, width, antialiased);
         });
     }
     
@@ -170,21 +187,9 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawPolylineColors(Vector2[] points, Color[] colors,
         float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawPolylineColors(points, colors, width, antialiased);
-        });
-    }
-    
-    /// <summary>
-    /// <inheritdoc cref="Godot.CanvasItem.DrawDashedLine(Vector2, Vector2, Color, float, float, bool)"/>
-    /// </summary>
-    protected void QueuedDrawDashedLine(Vector2 from, Vector2 to, Color color,
-        float width = -1f, float dash = 2f, bool aligned = true)
-    {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawDashedLine(from, to, color, width, dash, aligned);
+            RenderingServer.CanvasItemAddPolyline(drawer, points, colors, width, antialiased);
         });
     }
 
@@ -196,34 +201,37 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawArc(Vector2 center, float radius, float startAngle, float endAngle,
         Color color, int pointCount = 128, float width = -1f, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        var points = new Vector2[pointCount];
+        
+        var deltaAngle = Math.Clamp(endAngle - startAngle, -Mathf.Pi, Mathf.Pi);
+        for (int i = 0; i < pointCount; i++)
         {
-            drawer.DrawArc(center, radius, startAngle, endAngle, pointCount,
-                color, width, antialiased);
-        });
+            var theta = (i / (pointCount - 1f)) * deltaAngle + startAngle;
+            points[i] = center + new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta)) * radius;
+        }
+    
+        QueuedDrawPolyline(points, color, width, antialiased);
     }
     
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawCircle(Vector2, float, Color)"/>
     /// </summary>
-    protected void QueuedDrawCircle(Vector2 center, float radius, Color color,
-        bool filled = true, float width = -1f, bool anitiliased = false)
+    protected void QueuedDrawCircle(Vector2 center, float radius, Color color, bool anitiliased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawCircle(center, radius, color, filled, width, anitiliased);
+            RenderingServer.CanvasItemAddCircle(drawer, center, radius, color, anitiliased);
         });
     }
     
     /// <summary>
     /// <inheritdoc cref="Godot.CanvasItem.DrawRect(Rect2, Color, bool, float)"/>
     /// </summary>
-    protected void QueuedDrawRect(Rect2 rect, Color color, bool filled = true,
-        float width = -1f)
+    protected void QueuedDrawRect(Rect2 rect, Color color, bool antialiased = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawRect(rect, color, filled, width);
+            RenderingServer.CanvasItemAddRect(drawer, rect, color, antialiased);
         });
     }
     
@@ -233,9 +241,11 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawPolygon(Vector2[] points, Color[] colors,
         Vector2[] uvs = null, Texture2D texture = null)
     {
-        AddDrawingTask((Drawer drawer) =>
+        var texId = texture?.GetRid() ?? default;
+        
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawPolygon(points, colors, uvs, texture);
+            RenderingServer.CanvasItemAddPolygon(drawer, points, colors, uvs, texId);
         });
     }
     
@@ -245,10 +255,10 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawColoredPolygon(Vector2[] points, Color color,
         Vector2[] uvs = null, Texture2D texture = null)
     {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawColoredPolygon(points, color, uvs, texture);
-        });
+        var colors = new Color[points.Length];
+        Array.Fill(colors, color);
+        
+        QueuedDrawPolygon(points, colors, uvs, texture);
     }
     
     /// <summary>
@@ -257,89 +267,11 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawPrimitive(Vector2[] points, Color[] colors,
         Vector2[] uvs = null, Texture2D texture = null)
     {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawPrimitive(points, colors, uvs, texture);
-        });
-    }
-
-    // string
-
-    /// <summary>
-    /// <inheritdoc cref="Godot.CanvasItem.DrawString(Font, Vector2, string, HorizontalAlignment, float, int, Color?, TextServer.JustificationFlag, TextServer.Direction, TextServer.Orientation)"/>
-    /// </summary>
-    protected void QueuedDrawString(Font font, Vector2 pos, string text,
-        float width = -1f, int fontSize = 16, Color? modulate = null,
-        HorizontalAlignment alignment = HorizontalAlignment.Left,
-        TextServer.JustificationFlag justificationFlags =
-        TextServer.JustificationFlag.Kashida | TextServer.JustificationFlag.WordBound,
-        TextServer.Direction direction = TextServer.Direction.Auto,
-        TextServer.Orientation orientation = TextServer.Orientation.Horizontal)
-    {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawString(font, pos, text, alignment, width, fontSize, modulate,
-                justificationFlags, direction, orientation);
-        });
-    }
+        var texId = texture?.GetRid() ?? default;
     
-    /// <summary>
-    /// <inheritdoc cref="Godot.CanvasItem.DrawStringOutline(Font, Vector2, string, HorizontalAlignment, float, int, int, Color?, TextServer.JustificationFlag, TextServer.Direction, TextServer.Orientation)"/>
-    /// </summary>
-    protected void QueuedDrawStringOutline(Font font, Vector2 pos, string text,
-        float width = -1f, int fontSize = 16, int size = 1, Color? modulate = null,
-        HorizontalAlignment alignment = HorizontalAlignment.Left,
-        TextServer.JustificationFlag justificationFlags =
-        TextServer.JustificationFlag.Kashida | TextServer.JustificationFlag.WordBound,
-        TextServer.Direction direction = TextServer.Direction.Auto,
-        TextServer.Orientation orientation = TextServer.Orientation.Horizontal)
-    {
-        AddDrawingTask((Drawer drawer) =>
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawStringOutline(font, pos, text, alignment, width, fontSize, size,
-                modulate, justificationFlags, direction, orientation);
-        });
-    }
-    
-    /// <summary>
-    /// <inheritdoc cref="Godot.CanvasItem.DrawMultilineString(Font, Vector2, string, HorizontalAlignment, float, int, int, Color?, TextServer.LineBreakFlag, TextServer.JustificationFlag, TextServer.Direction, TextServer.Orientation)"/>
-    /// </summary>
-    protected void QueuedDrawMultilineString(Font font, Vector2 pos, string text,
-        float width = -1f, int fontSize = 16, int maxLines = -1, Color? modulate = null,
-        HorizontalAlignment alignment = HorizontalAlignment.Left,
-        TextServer.LineBreakFlag brkFlags = 
-        TextServer.LineBreakFlag.Mandatory | TextServer.LineBreakFlag.WordBound,
-        TextServer.JustificationFlag justificationFlags =
-        TextServer.JustificationFlag.Kashida | TextServer.JustificationFlag.WordBound,
-        TextServer.Direction direction = TextServer.Direction.Auto,
-        TextServer.Orientation orientation = TextServer.Orientation.Horizontal)
-    {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawMultilineString(font, pos, text, alignment, width, fontSize, 
-                maxLines, modulate, brkFlags, justificationFlags, 
-                direction, orientation);
-        });
-    }
-    
-    /// <summary>
-    /// <inheritdoc cref="Godot.CanvasItem.DrawMultilineStringOutline(Font, Vector2, string, HorizontalAlignment, float, int, int, int, Color?, TextServer.LineBreakFlag, TextServer.JustificationFlag, TextServer.Direction, TextServer.Orientation)"/>
-    /// </summary>
-    protected void QueuedDrawMultilineStringOutline(Font font, Vector2 pos, string text,
-        float width = -1f, int fontSize = 16, int size = 1, int maxLines = -1, Color? modulate = null,
-        HorizontalAlignment alignment = HorizontalAlignment.Left,
-        TextServer.LineBreakFlag brkFlags =
-        TextServer.LineBreakFlag.Mandatory | TextServer.LineBreakFlag.WordBound,
-        TextServer.JustificationFlag justificationFlags =
-        TextServer.JustificationFlag.Kashida | TextServer.JustificationFlag.WordBound,
-        TextServer.Direction direction = TextServer.Direction.Auto,
-        TextServer.Orientation orientation = TextServer.Orientation.Horizontal)
-    {
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawMultilineStringOutline(font, pos, text, alignment, width, fontSize,
-                maxLines, size, modulate, brkFlags, justificationFlags,
-                direction, orientation);
+            RenderingServer.CanvasItemAddPrimitive(drawer, points, colors, uvs, texId);
         });
     }
 
@@ -350,14 +282,17 @@ public partial class Draw2D : Node2D
     /// </summary>
     protected void QueuedDrawTexture(Texture2D texture, Vector2 pos, Color? modulate = null)
     {
+        if (texture == null) return;
+        
         if (Centered)
         {
-            Vector2 texSize = new(texture.GetWidth(), texture.GetHeight());
+            var texSize = new Vector2(texture.GetWidth(), texture.GetHeight());
             pos -= texSize / 2f;
         }
-        AddDrawingTask((Drawer drawer) =>
+        
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawTexture(texture, pos, modulate);
+            texture.Draw(drawer, pos, modulate, false);
         });
     }
     
@@ -367,9 +302,11 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawTextureRect(Texture2D texture, Rect2 rect, bool tile,
         Color? modulate = null, bool transpose = false)
     {
-        AddDrawingTask((Drawer drawer) =>
+        if (texture == null) return;
+        
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawTextureRect(texture, rect, tile, modulate, transpose);
+            texture.DrawRect(drawer, rect, tile, modulate, transpose);
         });
     }
     
@@ -379,9 +316,11 @@ public partial class Draw2D : Node2D
     protected void QueuedDrawTextureRectRegion(Texture2D texture, Rect2 rect, Rect2 srcRect,
         Color? modulate = null, bool transpose = false, bool clipUV = true)
     {
-        AddDrawingTask((Drawer drawer) =>
+        if (texture == null) return;
+
+        AddDrawingTask((drawer) =>
         {
-            drawer.DrawTextureRectRegion(texture, rect, srcRect, modulate, transpose, clipUV);
+            texture.DrawRectRegion(drawer, rect, srcRect, modulate, transpose, clipUV);
         });
     }
 
@@ -394,15 +333,7 @@ public partial class Draw2D : Node2D
         Vector2 pos, Color? modulate = null)
     {
         var texture = spr.GetFrameTexture(animation, frame);
-        if (Centered)
-        {
-            Vector2 texSize = new(texture.GetWidth(), texture.GetHeight());
-            pos -= texSize / 2f;
-        } 
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawTexture(texture, pos, modulate);
-        });
+        QueuedDrawTexture(texture, pos, modulate);
     }
     
     /// <summary>
@@ -412,10 +343,7 @@ public partial class Draw2D : Node2D
         Rect2 rect, bool tile, Color? modulate = null, bool transpose = false)
     {
         var texture = spr.GetFrameTexture(animation, frame);
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawTextureRect(texture, rect, tile, modulate, transpose);
-        });
+        QueuedDrawTextureRect(texture, rect, tile, modulate, transpose);
     }
     
     /// <summary>
@@ -426,10 +354,7 @@ public partial class Draw2D : Node2D
         bool transpose = false, bool clipUV = true)
     {
         var texture = spr.GetFrameTexture(animation, frame);
-        AddDrawingTask((Drawer drawer) =>
-        {
-            drawer.DrawTextureRectRegion(texture, rect, srcRect, modulate, transpose, clipUV);
-        });
+        QueuedDrawTextureRectRegion(texture, rect, srcRect, modulate, transpose, clipUV);
     }
 
     // sprite2d
