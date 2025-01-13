@@ -90,6 +90,7 @@ public partial class ShadowCaster2D : Node
             SyncItem = syncItem;
         
             Id = RenderingServer.CanvasItemCreate();
+            RenderingServer.CanvasItemSetParent(Id, ParentId);
         }
 
         public bool Init(int index)
@@ -120,8 +121,6 @@ public partial class ShadowCaster2D : Node
                 
                 Texture = texture;
                 if (Texture == null) return false;
-                
-                RenderingServer.CanvasItemSetParent(Id, ParentId);
                 
                 var pos = centered ? 
                     -new Vector2(Texture.GetWidth(), Texture.GetHeight()) / 2f : 

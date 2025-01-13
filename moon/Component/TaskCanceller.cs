@@ -14,7 +14,7 @@ public class TaskCanceller
         Task = taskFunc(Cts.Token);
     }
         
-    public Action OnCancel { get; set; }
+    public Action OnCancel { get; init; }
 
     public void Cancel()
     {
@@ -37,7 +37,7 @@ public class TaskCanceller<T>
         Task = taskFunc(Cts.Token);
     }
         
-    public Action OnCancel { get; set; }
+    public Action OnCancel { get; init; }
 
     public void Cancel()
     {
