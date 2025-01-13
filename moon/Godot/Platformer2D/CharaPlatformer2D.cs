@@ -81,7 +81,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
     public delegate void CeilingCollidedEventHandler();
 
     [Signal]
-    public delegate void WallCollidedEventHandler();
+    public delegate void WallCollidedEventHandler(int dir);
 
     [Signal]
     public delegate void WaterEnteredEventHandler();
@@ -120,6 +120,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
 
     public Vector2 GetGravityDirection() => -UpDirection;
     public void SetGravitySpeed(float speed) => Gravity = speed;
+    public float GetGravitySpeed() => Gravity;
     public void Jump(float height)
     {
         // v^2 = 2ax
@@ -133,6 +134,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
         MoveSpeed = speed;
         if (updatePhysics) RealMoveSpeed = MoveSpeed;
     }
+    public float GetMoveSpeed() => MoveSpeed;
 
     private float RealMoveSpeed = 0f;
     public float GetLastMoveSpeed() => RealMoveSpeed;
@@ -186,6 +188,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
 
         var onFloorLast = IsOnFloor();
         var onCeilingLast = IsOnCeiling();
+        var onWallLast = OnWall;
         var inWaterLast = InWater;
 
         OnWall = false;
@@ -270,7 +273,7 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
         
         if (!onFloorLast && IsOnFloor()) EmitSignal(SignalName.FloorCollided);
         if (!onCeilingLast && IsOnCeiling()) EmitSignal(SignalName.CeilingCollided);
-        if (OnWall) EmitSignal(SignalName.WallCollided);
+        if (!onWallLast && OnWall) EmitSignal(SignalName.WallCollided, Math.Sign(moveSpeed));
         if (!inWaterLast && InWater) EmitSignal(SignalName.WaterEntered);
         if (inWaterLast && !InWater) EmitSignal(SignalName.WaterExited);
     }

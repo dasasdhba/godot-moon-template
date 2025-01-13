@@ -79,7 +79,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
     public delegate void CeilingCollidedEventHandler();
 
     [Signal]
-    public delegate void WallCollidedEventHandler();
+    public delegate void WallCollidedEventHandler(int dir);
 
     [Signal]
     public delegate void WaterEnteredEventHandler();
@@ -160,6 +160,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             state.LinearVelocity = state.LinearVelocity.WithAxis(vec);
         };
     }
+    public float GetGravitySpeed() => LinearVelocity.Dot(GetGravityDirection());
     
     public void Jump(float height)
     {
@@ -191,6 +192,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             if (updatePhysics) LastVelocity = LastVelocity.WithAxis(vec);
         };
     }
+    public float GetMoveSpeed() => LastVelocity.Dot(GetMoveDirection());
     
     private Vector2 LastMotion;
     public Vector2 GetLastMotion() => LastMotion;
@@ -236,6 +238,8 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             // rigid body with rectangle shape often get stuck here
             // a capsule bottom is recommended
             
+            var moveSign = 0;
+            
             for (int i = 0; i < state.GetContactCount(); i++)
             {
                 var n = state.GetContactLocalNormal(i);
@@ -251,12 +255,13 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
                      > Mathf.DegToRad(SlopeMaxAngle))
                 {
                     OnWall = true;
+                    moveSign = -Math.Sign(n.Dot(GetMoveDirection()));
                 }
             }
             
             if (OnFloor && !LastOnFloor) EmitSignal(SignalName.FloorCollided);
             if (OnCeiling && !LastOnCeiling) EmitSignal(SignalName.CeilingCollided);
-            if (OnWall && !LastOnWall) EmitSignal(SignalName.WallCollided);
+            if (OnWall && !LastOnWall) EmitSignal(SignalName.WallCollided, moveSign);
         
             // water update
         

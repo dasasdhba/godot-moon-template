@@ -12,8 +12,8 @@ public interface IPlatformer2D
     public event Action SignalOneshotFloorCollided;
     public event Action SignalCeilingCollided;
     public event Action SignalOneshotCeilingCollided;
-    public event Action SignalWallCollided;
-    public event Action SignalOneshotWallCollided;
+    public event Action<int> SignalWallCollided;
+    public event Action<int> SignalOneshotWallCollided;
     public event Action SignalWaterEntered;
     public event Action SignalOneshotWaterEntered;
     public event Action SignalWaterExited;
@@ -36,4 +36,6 @@ public interface IPlatformer2D
     public Vector2 GetLastMotion();
     public float GetLastGravitySpeed();
     public float GetLastMoveSpeed();
+    public float GetGravitySpeed();
+    public float GetMoveSpeed();
 }
