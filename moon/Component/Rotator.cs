@@ -39,6 +39,7 @@ public partial class Rotator : Node
         
         var rotation = (float)RotateNode.Get(Node2D.PropertyName.Rotation);
         rotation += (float)Mathf.DegToRad(Speed * delta) * (Flip ? -1 : 1);
+        rotation = Mathf.Wrap(rotation, -float.Pi, float.Pi);
         RotateNode.Set(Node2D.PropertyName.Rotation, rotation);
     }
 }

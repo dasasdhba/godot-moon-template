@@ -105,6 +105,7 @@ public partial class View2DSetting : Node
     [Export]
     public float MinZoom { get ;set; } = 1f;
 
+#if TOOLS
     public override void _ValidateProperty(Dictionary property)
     {
         if (
@@ -122,6 +123,7 @@ public partial class View2DSetting : Node
             property["usage"] = (uint)PropertyUsageFlags.ReadOnly;
         }
     }
+#endif    
 
     public void ApplySetting()
     {

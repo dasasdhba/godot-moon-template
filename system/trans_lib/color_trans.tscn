@@ -1,15 +1,12 @@
 [gd_scene load_steps=3 format=3 uid="uid://dvrui2k45hg5v"]
 
 [ext_resource type="Script" path="res://system/trans_lib/script/ColorTransNode.cs" id="1_2qrll"]
-[ext_resource type="Script" path="res://moon/Godot/TextureFill/color_fill.gd" id="2_6qg3x"]
+[ext_resource type="Script" path="res://moon/Godot/TextureFill/ColorFill.cs" id="2_q81vx"]
 
-[node name="ColorTrans" type="Node"]
+[node name="ColorTrans" type="CanvasLayer"]
+layer = 101
 script = ExtResource("1_2qrll")
 
-[node name="ColorFill" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 1152.0
-offset_bottom = 648.0
-script = ExtResource("2_6qg3x")
-dynamic = true
+[node name="ColorFill" type="Node2D" parent="."]
+script = ExtResource("2_q81vx")
+Size = Vector2(1152, 648)

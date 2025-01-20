@@ -2,7 +2,7 @@
 
 namespace Global;
 
-public partial class TransNode : Node
+public partial class TransNode : CanvasLayer
 {
     /// <summary>
     /// p 0->1

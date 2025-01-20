@@ -1,7 +1,9 @@
 extends Node
 class_name ControllerMapper
 
-func _convert_joypad_path(path: String, device: int, fallback: ControllerSettings.Devices) -> String:
+var ControllerSettings = preload("res://addons/controller_icons/Settings.gd")
+
+func _convert_joypad_path(path: String, device: int, fallback) -> String:
 	match _get_joypad_type(device, fallback):
 		ControllerSettings.Devices.LUNA:
 			return _convert_joypad_to_luna(path)

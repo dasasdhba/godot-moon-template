@@ -8,25 +8,14 @@ namespace Utils;
 /// </summary>
 public static partial class NodeU
 {
-    public static void SetURate(this Node node, double rate)
-    {
-        foreach (var child in node.GetChildren(true))
-        {
-            if (child is DelegateNode uNode) uNode.Rate = rate;
-            else SetURate(child, rate);
-        }
-    }
-
     public partial class DelegateNode : Node
     {
         public Action<double> ProcessAction { get ;set; }
         public Func<bool> IsPhysics { get; set; }
-        public double Rate { get ;set; } = 1d;
 
         protected void DelegateProcess(double delta)
         {
-            if (Rate <= 0d) return;
-            ProcessAction?.Invoke(delta * Rate);
+            ProcessAction?.Invoke(delta);
         }
 
         public override void _PhysicsProcess(double delta)

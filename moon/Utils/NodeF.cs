@@ -8,20 +8,6 @@ namespace Utils;
 /// </summary>
 public static partial class NodeF
 {
-    private const string NodeFRateTag = "__NodeFRate";
-
-    public static void SetFRateRecursively(this Node node, double rate, bool includeInternal = false)
-    {
-        node.SetFRate(rate);
-        node.SetChildrenRecursively(child => child.SetFRate(rate), includeInternal);
-    }
-
-    public static void SetFRate(this Node node, double rate)
-        => node.SetMeta(NodeFRateTag, rate);
-
-    public static double GetFRate(this Node node)
-        => (double)node.GetMeta(NodeFRateTag, 1d);
-
     public class DelegateProcess(Node node)
     {
         protected Node Root { get; set; } = node;
@@ -31,10 +17,7 @@ public static partial class NodeF
         {
             if (!Root.CanProcess()) return;
             
-            var rate = Root.GetFRate();
-            if (rate <= 0d) return;
-            
-            ProcessAction?.Invoke(delta * rate);
+            ProcessAction?.Invoke(delta);
         }
     }
     

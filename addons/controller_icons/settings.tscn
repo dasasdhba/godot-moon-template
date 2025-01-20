@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bxgyiri7j80ek"]
-
-[ext_resource type="Script" path="res://addons/controller_icons/Settings.gd" id="1_y0mt5"]
-
-[node name="Settings" type="Node"]
-script = ExtResource("1_y0mt5")

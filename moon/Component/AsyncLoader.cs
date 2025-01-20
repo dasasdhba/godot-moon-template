@@ -120,7 +120,7 @@ public class AsyncLoader
     
     private static readonly Queue<AsyncLoader> AsyncTasks = new();
     private static readonly object TaskLock = new();
-    private static readonly object InstantiateLock = new();
+    public static readonly object InstantiateLock = new();
     
     private static readonly Dictionary<string, LoadedStack> LoadedStackDict = new();
     

@@ -22,7 +22,7 @@ var _cached_callables : Array[Callable] = []
 
 var _last_input_type : InputType
 var _last_controller : int
-var _settings : ControllerSettings
+var _settings
 var _base_extension := "png"
 
 # Custom mouse velocity calculation, because Godot
@@ -111,9 +111,9 @@ func _parse_input_actions():
 
 func _ready():
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-	_settings = load("res://addons/controller_icons/settings.tscn").instantiate()
+	_settings = load("res://addons/controller_icons/settings.tres")
 	if not _settings:
-		_settings = ControllerSettings.new()
+		_settings = load("res://addons/controller_icons/Settings.gd").new()
 	if _settings.custom_mapper:
 		Mapper = _settings.custom_mapper.new()
 	if _settings.custom_file_extension and not _settings.custom_file_extension.is_empty():
@@ -186,7 +186,7 @@ func refresh():
 	# All it takes is to signal icons to refresh paths
 	emit_signal("input_type_changed", _last_input_type, _last_controller)
 
-func get_joypad_type(controller: int = _last_controller) -> ControllerSettings.Devices:
+func get_joypad_type(controller: int = _last_controller): #-> ControllerSettings.Devices:
 	return Mapper._get_joypad_type(controller, _settings.joypad_fallback)
 
 func parse_path(path: String, input_type = _last_input_type, last_controller = _last_controller) -> Texture:
