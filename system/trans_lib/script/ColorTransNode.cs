@@ -10,8 +10,8 @@ public partial class ColorTransNode : TransNode
 
     public Color NodeColor
     {
-        get => (Color)GetNode("ColorFill").Get("color");
-        set => GetNode("ColorFill").Set("color", value);
+        get => GetNode<ColorFill>("ColorFill").Color;
+        set => GetNode<ColorFill>("ColorFill").Color = value;
     }
 
     public override void _Ready()
