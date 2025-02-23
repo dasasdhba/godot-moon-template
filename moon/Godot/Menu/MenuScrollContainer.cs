@@ -66,8 +66,9 @@ public partial class MenuScrollContainer : Control
     
     [Export]
     public double ScrollVerticalRate { get ;set; } = 20d;
-
-    protected List<MenuItemRect> ItemRects { get ;set; } = new();
+    
+    private IEnumerable<MenuRect> GetMenuRects()
+        => this.GetChildrenRecursively<MenuRect>();
     
     public MenuScrollContainer() : base()
     {
@@ -95,19 +96,8 @@ public partial class MenuScrollContainer : Control
             }, () => ProcessCallback == MenuScrollContainerProcessCallback.Physics);
         };
     
-        Ready += () =>
-        {
-            AddItemRects(this);
-            ForceUpdate();
-        };
+        Ready += ForceUpdate;
     }
-
-    public void AddItemRects(Node node)
-        => node.SetChildrenRecursively((child) =>
-        {
-            if (child is MenuItemRect rect) 
-                ItemRects.Add(rect);
-        });
 
     public void ForceUpdate()
     {
@@ -117,7 +107,7 @@ public partial class MenuScrollContainer : Control
     
     public float GetCurrentFocusX()
     {
-        foreach (var rect in ItemRects)
+        foreach (var rect in GetMenuRects())
         {
             if (rect.IsFocus())
             {
@@ -130,7 +120,7 @@ public partial class MenuScrollContainer : Control
 
     public float GetCurrentFocusY()
     {
-        foreach (var rect in ItemRects)
+        foreach (var rect in GetMenuRects())
         {
             if (rect.IsFocus())
             {

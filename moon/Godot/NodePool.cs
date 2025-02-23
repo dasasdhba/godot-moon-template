@@ -22,7 +22,7 @@ public partial class NodePool : Node
     [Export]
     public PackedScene PoolScene { get; set; }
     
-    protected Stack<Node> Pool { get; set; } = [ ];
+    private Stack<Node> Pool = [];
 
     public NodePool() : base()
     {
@@ -35,25 +35,17 @@ public partial class NodePool : Node
             }
         };
         
-        TreeExiting += () =>
+        TreeExited += () =>
         {
-            if (!IsQueuedForDeletion()) return;
-            
             foreach (var node in Pool) node.QueueFree();
             Pool.Clear();
         };
     }
 
-    protected Node CreatePoolNode()
+    private Node CreatePoolNode()
     {
         var node = PoolScene.Instantiate();
         SetPool(node);
-        node.TreeExiting += () =>
-        {
-            if (node.IsQueuedForDeletion()) return;
-                    
-            Pool.Push(node);
-        };
         
         return node;
     }
@@ -62,8 +54,10 @@ public partial class NodePool : Node
     public Node GetPoolNode()
         => Pool.Count == 0 ? (Strict ? null : CreatePoolNode()) : Pool.Pop();
     
+    private void SetPool(Node node) => node.SetData(PoolNodeData, this);
+    public void ReturnPool(Node node) => Pool.Push(node);
     
     private const string PoolNodeData = "PoolNode";
-    public static void SetPool(Node node) => node.SetData(PoolNodeData, true);
     public static bool IsInPool(Node node) => node.HasData(PoolNodeData);
+    public static NodePool GetPool(Node node) => node.GetData<NodePool>(PoolNodeData);
 }

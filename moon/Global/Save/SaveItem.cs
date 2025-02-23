@@ -13,6 +13,7 @@ public partial class SaveItem : Node
     [Export]
     public Dictionary<string, Variant> Items { get; set; } = new();
 
+#if TOOLS
     [Export]
     public bool DebugOverride { get; set; } = false;
 
@@ -29,5 +30,6 @@ public partial class SaveItem : Node
             }
         }
     }
+#endif
 
 }

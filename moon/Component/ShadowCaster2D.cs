@@ -285,7 +285,7 @@ public partial class ShadowCaster2D : Node
     {
         TreeEntered += () =>
         {
-            ShadowProcessor ??= new(this);
+            ShadowProcessor = new(this);
             Root.CallDeferred(Node.MethodName.AddSibling, ShadowProcessor);
             
             this.ActionRepeat(Interval, () =>
@@ -297,8 +297,7 @@ public partial class ShadowCaster2D : Node
         
         TreeExited += () =>
         {
-            if (IsQueuedForDeletion())
-                ShadowProcessor.Clear();
+            ShadowProcessor.Clear();
         };
     }
     

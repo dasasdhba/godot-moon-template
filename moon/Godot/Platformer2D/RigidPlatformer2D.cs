@@ -232,7 +232,7 @@ public partial class RigidPlatformer2D : RigidBody2D, IPlatformer2D
             OnCeiling = false;
             OnWall = false;
             
-            // HACK: we need a more precise collision detection here
+            // warning: we need a more precise collision detection here
             // contact reports are proven to be unreliable
             
             // rigid body with rectangle shape often get stuck here

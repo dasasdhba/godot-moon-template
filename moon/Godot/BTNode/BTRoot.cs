@@ -18,7 +18,10 @@ public partial class BTRoot : Node
 
     [Export]
     public BTRootProcessCallback ProcessCallback { get; set; } = BTRootProcessCallback.Idle;
-
+    
+    [Signal]
+    public delegate void StartedEventHandler();
+    
     [Signal]
     public delegate void BTStartedEventHandler(BTNode node);
 
@@ -45,12 +48,15 @@ public partial class BTRoot : Node
             if (node.Persistent)
                 node.BTReset();
         }
+        
+        EmitSignal(SignalName.Started);
     }
 
     public void Stop()
     {
         if (!Active) return;
-
+        
+        CurrentBTNode?.BTStop();
         ClearCache();
         Active = false;
         EmitSignal(SignalName.BTFinished);
@@ -80,6 +86,8 @@ public partial class BTRoot : Node
         if (IsInstanceValid(CachedNode))
             CachedNode.QueueFree();
     }
+    
+    private BTNode CurrentBTNode;
 
     public void BTProcess(double delta)
     {
@@ -94,6 +102,7 @@ public partial class BTRoot : Node
         var node = BTNodes[CurrentIndex];
         if (!node.Persistent)
             node = GetCacheNode(node);
+        CurrentBTNode = node;    
         
         if (!ReadyHint)
         {
@@ -105,6 +114,7 @@ public partial class BTRoot : Node
         if (node.BTProcess(delta))
         {
             node.BTFinish();
+            CurrentBTNode = null;
             ReadyHint = false;
             if (node.End)
             {
@@ -132,10 +142,10 @@ public partial class BTRoot : Node
         ChildEnteredTree += (Node node) =>
         {
             if (node is BTNode bt)
+            {
+                bt.Root = this;
                 BTNodes.Add(bt);
-
-            if (node is BTSubRoot sub)
-                sub.Root = this;
+            }
         };
 
         ChildExitingTree += (Node node) =>

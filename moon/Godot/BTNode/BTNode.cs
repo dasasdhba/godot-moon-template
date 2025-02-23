@@ -4,6 +4,11 @@
 public partial class BTNode : Node
 {
     /// <summary>
+    /// Root access
+    /// </summary>
+    public BTRoot Root { get ;set; }
+
+    /// <summary>
     /// for non persistent one, process will be called in a copy.
     /// in which case, the original BTNode will be kept as static.
     /// </summary>
@@ -41,4 +46,9 @@ public partial class BTNode : Node
     /// define the next BTNode, NextNode property is used by default.
     /// </summary>
     public virtual BTNode BTNext() => NextNode;
+    
+    /// <summary>
+    /// Called when the BTRoot is forced stopped.
+    /// </summary>
+    public virtual void BTStop() { }
 }

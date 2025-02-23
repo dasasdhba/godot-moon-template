@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using Godot.Collections;
 using Utils;
 
 namespace Godot;
@@ -16,6 +16,9 @@ public abstract partial class Inputer : Node
     [Export]
     public InputBufferProcessCallback BufferProcessMode { get; set; }
         = InputBufferProcessCallback.Physics;
+        
+    [Export]
+    public Array<string> BufferPauseGuards { get; set; } = [];
 
     public struct InputKey
     {
@@ -31,7 +34,7 @@ public abstract partial class Inputer : Node
 
     public abstract InputKey GetKey(string key);
 
-    private Dictionary<string, bool> BufferMaps { get ;set; } = new();
+    private System.Collections.Generic.Dictionary<string, bool> BufferMaps { get ;set; } = new();
 
     public bool IsKeyPressed(string key, bool buffered = false)
     {
@@ -55,11 +58,34 @@ public abstract partial class Inputer : Node
             dict[key] = GetKey(key).Pressed;
         }
     }
+    
+    // add buffer guards when paused
+    private partial class BufferPauseNode : Node
+    {
+        private Inputer Inputer;
+    
+        public BufferPauseNode(Inputer inputer) : base()
+        {
+            Inputer = inputer;
+            ProcessMode = ProcessModeEnum.Always;
+        }
+
+        public override void _PhysicsProcess(double delta)
+        {
+            if (Inputer.CanProcess()) return;
+            
+            foreach (var key in Inputer.BufferPauseGuards)
+            {
+                Inputer.SetKeyBuffered(key);
+            }
+        }
+    }
 
     public Inputer() : base()
     {
         TreeEntered += () =>
         {
+            AddChild(new BufferPauseNode(this));
             this.AddProcess(BufferProcess, () => BufferProcessMode == InputBufferProcessCallback.Physics);
         };
     }

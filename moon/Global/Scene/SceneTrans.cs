@@ -9,7 +9,7 @@ public abstract class SceneTrans
 
     public double InTime { get ;set; } = 0.5d;
     public double InWaitTime { get ;set; } = 0.4d;
-    public double OutWaitTime { get ; set; } = 0.1d;
+    public double OutWaitTime { get ; set; } = -1d;
     public double OutTime { get ;set; } = 0.5d;
     public Func<double ,double> Interpolation { get ;set; } = p => p;
 

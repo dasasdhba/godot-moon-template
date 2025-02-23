@@ -110,6 +110,8 @@ namespace GodotTask
             if (s_Global == null)
             {
                 Initialize();
+                var isolatedPlayerLoopRunner = new IsolatedGDTaskPlayerLoopRunner(this);
+                AddChild(isolatedPlayerLoopRunner);
                 s_Global = this;
                 return;
             }

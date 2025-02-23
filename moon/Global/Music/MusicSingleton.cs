@@ -64,22 +64,28 @@ public partial class MusicSingleton : Node
         public void FadePlay(float pos = 0)
         {
             FadeIn();
+            Resume();
             Play(pos);
         }
 
         public void DirectPlay(float pos = 0)
         {
             FadeReset();
+            Resume();
             Play(pos);
         }
 
         public void FadeStop()
         {
             if (!Playing) return;
-
-            FadeOut();
+            
+            if (!IsFadeOut())
+                FadeOut();
             FadePaused = false;
         }
+        
+        private bool IsFadeIn() => FadeDir == 1;
+        private bool IsFadeOut() => FadeDir == -1;
         
         private void FadeIn()
         {
@@ -101,14 +107,28 @@ public partial class MusicSingleton : Node
             FadeDir = 0;
             CurrentVolume = Volume;
         }
+
+        public void Pause()
+        {
+            if (StreamPaused) return;
+            
+            FadeReset();
+            StreamPaused = true;
+        }
+
+        public void Resume()
+        {
+            if (!StreamPaused) return;
+            
+            FadeReset();
+            StreamPaused = false;
+        }
         
-        public void Pause() => StreamPaused = true;
-        public void Resume() => StreamPaused = false;
         public bool IsPaused() => StreamPaused;
         
         public void FadePause()
         {
-            if (IsPaused()) return;
+            if (IsPaused() || IsFadeOut()) return;
             
             FadeOut();
             FadePaused = true;
@@ -213,9 +233,18 @@ public partial class MusicSingleton : Node
         for (int i = 0; i < MaxChannel; i++)
             Resume(i);
     }
-    
-    public void FadePause(int channel = 0) => Players[channel].FadePause();
-    public void FadeResume(int channel = 0) => Players[channel].FadeResume();
+
+    public void FadePause(float fadetime = 1f, int channel = 0)
+    {
+        Players[channel].FadeTime = fadetime;
+        Players[channel].FadePause();
+    }
+
+    public void FadeResume(float fadetime = 1f, int channel = 0)
+    {
+        Players[channel].FadeTime = fadetime;
+        Players[channel].FadeResume();
+    }
     
     public void FadePauseAll()
     {

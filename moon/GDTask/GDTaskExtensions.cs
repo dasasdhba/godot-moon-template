@@ -11,15 +11,6 @@ namespace GodotTask
     public static partial class GDTaskExtensions
     {
         /// <summary>
-        /// Create a <see cref="GDTask"/> that waits for the given tween.
-        /// </summary>
-        public static async GDTask AsGDTask(this Godot.Tween tween, bool killTween = true)
-        {
-            await GDTask.ToSignal(tween, Godot.Tween.SignalName.Finished);
-            if (killTween) tween.Kill();
-        }
-    
-        /// <summary>
         /// Create a <see cref="GDTask"/> that wraps around this task.
         /// </summary>
         public static GDTask<T> AsGDTask<T>(this Task<T> task, bool useCurrentSynchronizationContext = true)

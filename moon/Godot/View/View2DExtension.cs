@@ -12,9 +12,13 @@ public static class View2DExtension
 
     public static void ViewShakeStop(this Node node)
         => node.GetView2D().ShakeStop();
-        
+
     public static View2D GetView2D(this Node node)
-        => node.GetViewport().GetMeta("ViewportView2D").As<View2D>();
+    {
+        if (node.HasMeta("ViewportView2D"))
+            return node.GetMeta("ViewportView2D").As<View2D>();
+        return node.GetViewport().GetMeta("ViewportView2D").As<View2D>();
+    }
 
     /// <summary>
     /// Return the current view rect.

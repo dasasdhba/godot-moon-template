@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using Global;
 using Godot;
 using GodotTask;
 using GodotTask.Triggers;
+using Utils;
 
 namespace Component;
 
@@ -15,25 +18,28 @@ public class AsyncLoader
     private int StackedCount { get ;set; }
     private bool Dead { get; set; } = false;
     
-    public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
+    public AsyncLoader(Node root, PackedScene scene, int maxCount = 1, int bufferCount = 0)
     {
         Scene = scene;
-        InitWithPath(root, scene.ResourcePath, maxCount);
+        InitWithPath(root, scene.ResourcePath, maxCount, bufferCount);
     }
 
-    public AsyncLoader(Node root, string scenePath, int maxCount = 1)
+    public AsyncLoader(Node root, string scenePath, int maxCount = 1, int bufferCount = 0)
     {
-        InitWithPath(root, scenePath, maxCount);
+        InitWithPath(root, scenePath, maxCount, bufferCount);
     }
 
-    private void InitWithPath(Node root, string scenePath, int maxCount = 1)
+    private void InitWithPath(Node root, string scenePath, int maxCount = 1, int bufferCount = 0)
     {
         Root = root;
         ScenePath = scenePath;
         
         LoadedStackDict.TryAdd(ScenePath, new());
         
-        AsyncInit(maxCount).Forget();
+        if (bufferCount > 0) Init(bufferCount);
+        var asyncCount = maxCount - bufferCount;
+        if (asyncCount > 0)
+            AsyncInit(asyncCount).Forget();
         
         Root.TreeExited += () => AsyncDead().Forget();
     }
@@ -47,12 +53,9 @@ public class AsyncLoader
             if (loaded.Stack.Count == 0)
             {
             #if TOOLS
-                GD.PushWarning($"AsyncLoader: All nodes are in use at {Root.Name} with {Scene.ResourcePath}. Consider increasing MaxCount.");
+                GD.PushWarning($"AsyncLoader: All nodes are in use at {Root.GetUniquePath()} with {Scene.ResourcePath}. Consider increasing MaxCount, or create buffer at start.");
             #endif
-                lock (InstantiateLock)
-                {
-                    return Scene.Instantiate();
-                }
+                return Scene.InstantiateSafely();
             }
             
             result = loaded.Stack.Pop();
@@ -63,7 +66,7 @@ public class AsyncLoader
         return result;
     }
 
-    private async GDTaskVoid AddCreateTask(int count = 1)
+    private async GDTask AddCreateTask(int count = 1)
     {
         await GDTask.RunOnThreadPool(() =>
         {
@@ -83,14 +86,26 @@ public class AsyncLoader
         });
     }
 
-    private async GDTaskVoid AsyncInit(int count)
+    private void Init(int count)
+    {
+        Scene ??= GD.Load<PackedScene>(ScenePath);
+        var stack = LoadedStackDict[ScenePath];
+        foreach (var r in Scene.InstantiateSafely(count))
+        {
+            stack.Stack.Push(r);
+            StackedCount++;
+        }
+    }
+
+    private async GDTask AsyncInit(int count)
     {
         await Root.OnReadyAsync();
-        Scene ??= GD.Load<PackedScene>(ScenePath);
+        Scene ??= await GDTask.RunOnThreadPool(() 
+            => GD.Load<PackedScene>(ScenePath));
         AddCreateTask(count).Forget();
     }
 
-    private async GDTaskVoid AsyncDead()
+    private async GDTask AsyncDead()
     {
         await GDTask.RunOnThreadPool(() =>
         {
@@ -101,6 +116,7 @@ public class AsyncLoader
 
                 for (int i = 0; i < StackedCount; i++)
                 {
+                    if (loaded.Stack.Count == 0) break;
                     var result = loaded.Stack.Pop();
                     result.QueueFree();
                 }
@@ -120,14 +136,13 @@ public class AsyncLoader
     
     private static readonly Queue<AsyncLoader> AsyncTasks = new();
     private static readonly object TaskLock = new();
-    public static readonly object InstantiateLock = new();
     
     private static readonly Dictionary<string, LoadedStack> LoadedStackDict = new();
     
     /// <summary>
     /// Should be called for first task run.
     /// </summary>
-    private static async GDTaskVoid AsyncLoad()
+    private static async GDTask AsyncLoad()
     {
         await GDTask.RunOnThreadPool(() =>
         {
@@ -142,18 +157,14 @@ public class AsyncLoader
                     
                     lock (loaded.Lock)
                     {
-                        if (loader.Dead && loader.StackedCount >= 0) continue;
+                        if (loader.Dead) continue;
                     }
                     
-                    Node result;
-                    lock (InstantiateLock)
-                    {
-                        result = loader.Scene.Instantiate();
-                    }
+                    var result = loader.Scene.InstantiateSafely();
 
                     lock (loaded.Lock)
                     {
-                        if (loader.Dead && loader.StackedCount >= 0)
+                        if (loader.Dead)
                         {
                             result.QueueFree();
                             continue;
@@ -174,14 +185,14 @@ public class AsyncLoader<T> where T : Node
 {
     private AsyncLoader Loader { get ;set; }
     
-    public AsyncLoader(Node root, PackedScene scene, int maxCount = 1)
+    public AsyncLoader(Node root, PackedScene scene, int maxCount = 1, int bufferCount = 0)
     {
-        Loader = new(root, scene, maxCount);
+        Loader = new(root, scene, maxCount, bufferCount);
     }
     
-    public AsyncLoader(Node root, string scenePath, int maxCount = 1)
+    public AsyncLoader(Node root, string scenePath, int maxCount = 1, int bufferCount = 0)
     {
-        Loader = new(root, scenePath, maxCount);
+        Loader = new(root, scenePath, maxCount, bufferCount);
     }
     
     public T Create() => (T)Loader.Create();

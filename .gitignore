@@ -11,6 +11,10 @@ Moon.sln.DotSettings.user
 Properties/
 .idea/
 
+# debug
+
+moon_scene_path.debug
+
 # exclude folders
 
 build/

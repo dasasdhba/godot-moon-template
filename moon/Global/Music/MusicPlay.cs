@@ -66,7 +66,8 @@ public partial class MusicPlay : Node
         }
     }
 
-    public bool IsPlaying() => Moon.Music.IsPlaying(Stream, Channel);
+    public bool IsPlaying() => Moon.Music.IsPlaying(Stream, Channel)
+        && !Moon.Music.IsPaused(Channel);
 
     public void Play(bool reset, bool forceVolume = false)
     {

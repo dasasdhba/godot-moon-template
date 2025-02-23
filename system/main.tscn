@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dtwkvh7xffrbk"]
+
+[ext_resource type="Script" path="res://moon/Global/GameEntry.cs" id="1_bikha"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_bikha")
+FirstScenePath = "res://system/title.tscn"

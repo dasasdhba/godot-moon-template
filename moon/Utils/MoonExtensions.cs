@@ -3,15 +3,110 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Component;
+using Global;
 using GodotTask;
 
 namespace Utils;
 
 // useful node extension functions
 
-public static class NodeExtensions
+public static class MoonExtensions
 {
+    #region DirAccess
+
+    public static IEnumerable<string> GetFilePaths(this DirAccess dir, Func<string, bool> filter = null)
+    {
+        var root = dir.GetCurrentDir();
+        foreach (var file in dir.GetFiles())
+        {
+            if (filter != null && !filter(file)) continue;
+            yield return root + "/" + file;
+        }
+    }
+    
+    public static IEnumerable<string> GetFilePathsRecursively(this DirAccess dir, Func<string, bool> filter = null)
+    {
+        var root = dir.GetCurrentDir();
+        foreach (var file in dir.GetFilePaths(filter)) yield return file;
+        foreach (var sub in dir.GetDirectories())
+        {
+            var subDir = DirAccess.Open(root + "/" + sub);
+            foreach (var file in subDir.GetFilePathsRecursively(filter)) yield return file;
+        }
+    }
+    
+    #endregion
+    
+    #region PackedScene
+    
+    private static object _instanceLock = new();
+
+    public static Node InstantiateSafely(this PackedScene scene)
+    {
+        lock (_instanceLock)
+        {
+            return scene.Instantiate();
+        }
+    }
+    
+    public static T InstantiateSafely<T>(this PackedScene scene) where T : Node
+    {
+        lock (_instanceLock)
+        {
+            return scene.Instantiate<T>();
+        }
+    }
+    
+    public static IEnumerable<Node> InstantiateSafely(this PackedScene scene, int count)
+    {
+        lock (_instanceLock)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return scene.Instantiate();
+            }
+        }
+    }
+    
+    public static IEnumerable<T> InstantiateSafely<T>(this PackedScene scene, int count) where T : Node
+    {
+        lock (_instanceLock)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                yield return scene.Instantiate<T>();
+            }
+        }
+    }
+    
+    #endregion
+
+    #region ConfigFile
+
+    public static Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
+    {
+        var result = new Dictionary<string, Variant>();
+        foreach (var key in config.GetSectionKeys(section))
+        {
+            result[key] = config.GetValue(section, key);
+        }
+        return result;
+    }
+
+    public static void SetSection(this ConfigFile config, string section, Dictionary<string, Variant> values)
+    {
+        foreach (var key in values.Keys)
+        {
+            config.SetValue(section, key, values[key]);
+        }
+    }
+
+    #endregion
+
     #region Node
+    
+    public static string GetUniquePath(this Node node)
+        => Moon.Scene.MainViewport.GetPathTo(node);
     
     public static T FindParent<T>(this Node node, Func<T, bool> filter = null) where T : Node
     {
@@ -36,12 +131,20 @@ public static class NodeExtensions
                 node.QueueFree();
         };
         
-        // HACK: this conflicts with object pooling
+        // this conflicts with object pooling
         // though the performance issue may not be very serious
         
         parent.TreeExited += node.QueueFree;
     }
-    
+
+    public static IEnumerable<T> GetChildren<T>(this Node node, bool includeInternal = false)
+    {
+        foreach (var child in node.GetChildren(includeInternal))
+        {
+            if (child is T t) yield return t;
+        }
+    }
+
     public static IEnumerable<Node> GetChildrenRecursively(this Node node, bool includeInternal = false)
     {
         foreach (var child in node.GetChildren(includeInternal))
@@ -51,6 +154,14 @@ public static class NodeExtensions
             {
                 yield return c;
             }
+        }
+    }
+    
+    public static IEnumerable<T> GetChildrenRecursively<T>(this Node node, bool includeInternal = false)
+    {
+        foreach (var child in node.GetChildrenRecursively(includeInternal))
+        {
+            if (child is T t) yield return t;
         }
     }
 
@@ -71,6 +182,10 @@ public static class NodeExtensions
         if (NodePool.IsInPool(node))
         {
             node.GetParent().CallDeferred(Node.MethodName.RemoveChild, node);
+            node.Connect(Node.SignalName.TreeExited, Callable.From(() =>
+            {
+                NodePool.GetPool(node).ReturnPool(node);
+            }), (int)GodotObject.ConnectFlags.OneShot);
             return;
         }
         
@@ -147,7 +262,18 @@ public static class NodeExtensions
             px += ux;
         }
     }
-    
+
+    public static void SetShaderParam(this CanvasItem item, string param, Variant value)
+    {
+        if (item.Material is not ShaderMaterial shader) return;
+        shader.SetShaderParameter(param, value);
+    }
+
+    public static T GetShaderParam<[MustBeVariant] T>(this CanvasItem item, string param)
+    {
+        if (item.Material is not ShaderMaterial shader) return default;
+        return shader.GetShaderParameter(param) is T t ? t : default;
+    }
     
     #endregion
     
@@ -198,13 +324,13 @@ public static class NodeExtensions
             return result;
         }
         
-        await Async.DelegatePhysics(body, () => isOverlapping(), ct);
-        await Async.DelegatePhysics(body, () => !isOverlapping(), ct);
+        await Async.WaitUntilPhysics(body, () => isOverlapping(), ct);
+        await Async.WaitUntilPhysics(body, () => !isOverlapping(), ct);
         
         body.CollisionMask = origin;
     }
 
-    public static TaskCanceller GetThrough(this PhysicsBody2D body)
+    public static CTask GetThrough(this PhysicsBody2D body)
     {
         var origin = body.CollisionMask;
         return new(body.GetThroughAsync)
@@ -226,13 +352,13 @@ public static class NodeExtensions
             return result;
         }
         
-        await Async.DelegatePhysics(body, () => isOverlapping(), ct);
-        await Async.DelegatePhysics(body, () => !isOverlapping(), ct);
+        await Async.WaitUntilPhysics(body, () => isOverlapping(), ct);
+        await Async.WaitUntilPhysics(body, () => !isOverlapping(), ct);
         
         body.CollisionMask = origin;
     }
 
-    public static TaskCanceller GetThrough(this PhysicsBody3D body)
+    public static CTask GetThrough(this PhysicsBody3D body)
     {
         var origin = body.CollisionMask;
         return new(body.GetThroughAsync)

@@ -1,5 +1,6 @@
 ﻿using Godot;
 using Godot.Collections;
+using GodotTask;
 
 namespace Global;
 
@@ -8,7 +9,6 @@ public partial class SaveSingleton : Node
 {
     private const string ConfigFileName = "Settings";
     private const string ConfigFileSuffix = "ini";
-    private static bool ConfigLoaded = false;
 
     public static bool Effect { get ;set; } = true;
 
@@ -18,9 +18,6 @@ public partial class SaveSingleton : Node
 
     public override void _Ready()
     {
-        if (ConfigLoaded) return;
-        ConfigLoaded = true;
-
         LoadConfig();
     }
 
@@ -68,13 +65,13 @@ public partial class SaveSingleton : Node
                 if (action.StartsWith("ui") || !config.HasSectionKey("Control", action))
                     continue;
                 InputMap.ActionEraseEvents(action);
-                foreach (InputEvent input in (Array<InputEvent>)config.GetValue("Control", action, new Array<InputEvent>()))
+                foreach (var input in (Array<InputEvent>)config.GetValue("Control", action, new Array<InputEvent>()))
                     InputMap.ActionAddEvent(action, input);
             }
         }
     }
 
-    public static void SaveConfig()
+    public static async GDTask SaveConfig()
     {
         ConfigFile config = new();
         static int volume(float volumeDb) => (int)(Mathf.DbToLinear(volumeDb) * 100f);
@@ -96,6 +93,9 @@ public partial class SaveSingleton : Node
             config.SetValue("Control", action, InputMap.ActionGetEvents(action));
         }
 
-        config.Save(GetConfigPath());
+        await GDTask.RunOnThreadPool(() =>
+        {
+            config.Save(GetConfigPath());
+        });
     }
 }

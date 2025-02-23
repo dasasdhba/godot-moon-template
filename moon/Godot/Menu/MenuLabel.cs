@@ -3,11 +3,11 @@ using Utils;
 namespace Godot;
 
 [GlobalClass]
-public partial class MenuItemLabel : Label
+public partial class MenuLabel : Label
 {
     [ExportCategory("MenuItemLabel")]
     [Export]
-    public MenuItemRect ItemRect { get ;set; }
+    public MenuRect ItemRect { get ;set; }
     
     [Export]
     public Color GeneralColor { get ;set; } = Colors.White;
@@ -16,15 +16,15 @@ public partial class MenuItemLabel : Label
     public Color FocusColor { get ;set; } = Colors.Yellow;
     
     [Export]
-    public Color DisabledColor { get ;set; } = Colors.Gray;
+    public Color DisabledColor { get ;set; } = new(0.5f, 0.5f, 0.5f);
 
-    public MenuItemLabel() : base()
+    public MenuLabel() : base()
     {
         TreeEntered += () =>
         {
-            ItemRect ??= this.FindParent<MenuItemRect>();
+            ItemRect ??= this.FindParent<MenuRect>();
             
-            this.AddProcess(() =>
+            this.AddPhysicsProcess(() =>
             {
                 if (!IsInstanceValid(ItemRect)) return;
                 

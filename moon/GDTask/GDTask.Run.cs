@@ -11,7 +11,7 @@ namespace GodotTask
         /// <param name="action">The work to execute asynchronously</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask RunOnThreadPool(Action action, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask RunOnThreadPool(Action action, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -27,7 +27,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                 }
             }
             else
@@ -45,7 +45,7 @@ namespace GodotTask
         /// <param name="state">Object to which to pass to action (may be null)</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask RunOnThreadPool(Action<object> action, object state, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask RunOnThreadPool(Action<object> action, object state, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -61,7 +61,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                 }
             }
             else
@@ -78,7 +78,7 @@ namespace GodotTask
         /// <param name="action">The delegate which create the task</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask RunOnThreadPool(Func<GDTask> action, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask RunOnThreadPool(Func<GDTask> action, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -94,7 +94,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                 }
             }
             else
@@ -112,7 +112,7 @@ namespace GodotTask
         /// <param name="state">Object to which to pass to action (may be null)</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask RunOnThreadPool(Func<object, GDTask> action, object state, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask RunOnThreadPool(Func<object, GDTask> action, object state, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -128,7 +128,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                 }
             }
             else
@@ -146,7 +146,7 @@ namespace GodotTask
         /// <param name="func">The work to execute asynchronously</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask<T> RunOnThreadPool<T>(Func<T> func, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask<T> RunOnThreadPool<T>(Func<T> func, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -162,7 +162,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                     cancellationToken.ThrowIfCancellationRequested();
                 }
             }
@@ -179,7 +179,7 @@ namespace GodotTask
         /// <param name="func">The delegate which create the task</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask<T> RunOnThreadPool<T>(Func<GDTask<T>> func, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask<T> RunOnThreadPool<T>(Func<GDTask<T>> func, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -196,7 +196,7 @@ namespace GodotTask
                 finally
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Yield();
+                    await Yield(timing);
                     cancellationToken.ThrowIfCancellationRequested();
                 }
             }
@@ -216,7 +216,7 @@ namespace GodotTask
         /// <param name="state">Object to which to pass to action (may be null)</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask<T> RunOnThreadPool<T>(Func<object, T> func, object state, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask<T> RunOnThreadPool<T>(Func<object, T> func, object state, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -232,7 +232,7 @@ namespace GodotTask
                 }
                 finally
                 {
-                    await Yield();
+                    await Yield(timing);
                     cancellationToken.ThrowIfCancellationRequested();
                 }
             }
@@ -250,7 +250,7 @@ namespace GodotTask
         /// <param name="state">Object to which to pass to action (may be null)</param>
         /// <param name="configureAwait">Returns to the main thread after await if set to true, otherwise, the executing thread is undefined</param>
         /// <param name="cancellationToken">A cancellation token that should be used to cancel the work</param>
-        public static async GDTask<T> RunOnThreadPool<T>(Func<object, GDTask<T>> func, object state, bool configureAwait = true, CancellationToken cancellationToken = default)
+        public static async GDTask<T> RunOnThreadPool<T>(Func<object, GDTask<T>> func, object state, CancellationToken cancellationToken = default, bool configureAwait = true, PlayerLoopTiming timing = PlayerLoopTiming.IsolatedProcess)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -267,7 +267,7 @@ namespace GodotTask
                 finally
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Yield();
+                    await Yield(timing);
                     cancellationToken.ThrowIfCancellationRequested();
                 }
             }

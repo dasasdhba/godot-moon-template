@@ -32,16 +32,13 @@ public static partial class Async
     
     public static async GDTask Wait(Node node, double time, bool physics = false)
     {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var timer = CreateWaitTimer(node, time, physics);
         await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
     }
     
-    public static async GDTask Wait(Node node, double time, CancellationToken ct, bool physics = false)
-    {
-        var timer = CreateWaitTimer(node, time, physics);
-        await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);
-    }
-
+    public static GDTask Wait(Node node, double time, CancellationToken ct, bool physics = false)
+        => WaitProcess(node, time, null, ct, physics);
 
     public static GDTask WaitPhysics(Node node, double time)
         => Wait(node, time, true);
@@ -78,16 +75,44 @@ public static partial class Async
         node.AddChild(timer, false, Node.InternalMode.Front);
         return timer;
     }
+    
+    private static AsyncProcessTimer CreateWaitProcessTimer(Node node, double time, Action<double> process,
+        CancellationToken ct, bool physics = false)
+    {
+        AsyncProcessTimer timer = new()
+        {
+            Autostart = true,
+            WaitTime = time,
+            ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle,
+        };
+        timer.Process = delta =>
+        {
+            if (ct.IsCancellationRequested)
+            {
+                timer.TimeLeft = 0d;
+                return;
+            }
+            
+            process?.Invoke(delta);
+        };
+
+        timer.BindParent(node);
+        timer.SignalTimeout += timer.QueueFree;
+        node.AddChild(timer, false, Node.InternalMode.Front);
+        return timer;
+    }
 
     public static async GDTask WaitProcess(Node node, double time, Action<double> process, bool physics = false)
     {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var timer = CreateWaitProcessTimer(node, time, process, physics);
         await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
     }
     
     public static async GDTask WaitProcess(Node node, double time, Action<double> process, CancellationToken ct, bool physics = false)
     {
-        var timer = CreateWaitProcessTimer(node, time, process, physics);
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var timer = CreateWaitProcessTimer(node, time, process, ct, physics);
         await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);
     }
 
@@ -135,53 +160,110 @@ public static partial class Async
         return delegateNode;
     }
     
-    public static GDTask Delegate(Node node, Func<bool> action, bool physics = false)
-        => DelegateProcess(    node, (delta) => action.Invoke(), physics);
-        
-    public static GDTask Delegate(Node node, Func<bool> action, CancellationToken ct, bool physics = false)
-        => DelegateProcess(node, (delta) => action.Invoke(), ct, physics);
-
-    public static GDTask DelegatePhysics(Node node, Func<bool> action)
-        => Delegate(node, action, true);
-        
-    public static GDTask DelegatePhysics(Node node, Func<bool> action, CancellationToken ct)
-        => Delegate(node, action, ct, true);
-
-    public static async GDTask DelegateProcess(Node node, Func<double, bool> action, bool physics = false)
+    private static AsyncDelegateNode CreateDelegateNode(Node node, Func<double, bool> action,
+        CancellationToken ct, bool physics = false)
     {
+        AsyncDelegateNode delegateNode = new()
+        {
+            IsPhysics = physics
+        };
+        delegateNode.Action = delta 
+            => ct.IsCancellationRequested || action.Invoke(delta);
+        
+        delegateNode.BindParent(node);
+        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        return delegateNode;
+    }
+    
+    public static GDTask WaitUntil(Node node, Func<bool> action, bool physics = false)
+        => WaitUntil(node, (delta) => action.Invoke(), physics);
+        
+    public static GDTask WaitUntil(Node node, Func<bool> action, CancellationToken ct, bool physics = false)
+        => WaitUntil(node, (delta) => action.Invoke(), ct, physics);
+
+    public static GDTask WaitUntilPhysics(Node node, Func<bool> action)
+        => WaitUntil(node, action, true);
+        
+    public static GDTask WaitUntilPhysics(Node node, Func<bool> action, CancellationToken ct)
+        => WaitUntil(node, action, ct, true);
+
+    public static async GDTask WaitUntil(Node node, Func<double, bool> action, bool physics = false)
+    {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var delegateNode = CreateDelegateNode(node, action, physics);
         await GDTask.ToSignal(delegateNode, AsyncDelegateNode.SignalName.Finished);
     }
     
-    public static async GDTask DelegateProcess(Node node, Func<double, bool> action, CancellationToken ct, bool physics = false)
+    public static async GDTask WaitUntil(Node node, Func<double, bool> action, CancellationToken ct, bool physics = false)
     {
-        var delegateNode = CreateDelegateNode(node, action, physics);
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var delegateNode = CreateDelegateNode(node, action, ct, physics);
         await GDTask.ToSignal(delegateNode, AsyncDelegateNode.SignalName.Finished, ct);
     }
 
-    public static GDTask DelegatePhysicsProcess(Node node, Func<double, bool> action)
-        => DelegateProcess(node, action, true);
+    public static GDTask WaitUntilPhysics(Node node, Func<double, bool> action)
+        => WaitUntil(node, action, true);
         
-    public static GDTask DelegatePhysicsProcess(Node node, Func<double, bool> action, CancellationToken ct)
-        => DelegateProcess(node, action, ct, true);
+    public static GDTask WaitUntilPhysics(Node node, Func<double, bool> action, CancellationToken ct)
+        => WaitUntil(node, action, ct, true);
+        
+    // wait frames
+
+    public static GDTask WaitFrame(Node node, int frames, bool physics = false)
+    {
+        var counter = 0;
+        return WaitUntil(node, () =>
+        {
+            counter++;
+            return counter >= frames;
+        }, physics);
+    }
+    
+    public static GDTask WaitFrame(Node node, bool physics = false)
+        => WaitFrame(node, 1, physics);
+    
+    public static GDTask WaitFrame(Node node, int frames, CancellationToken ct, bool physics = false)
+    {
+        var counter = 0;
+        return WaitUntil(node, () =>
+        {
+            counter++;
+            return counter >= frames;
+        }, ct, physics);
+    }
+    
+    public static GDTask WaitFrame(Node node, CancellationToken ct, bool physics = false)
+        => WaitFrame(node, 1, ct, physics);
+
+    public static GDTask WaitPhysicsFrame(Node node, int frames)
+        => WaitFrame(node, frames, true);
+        
+    public static GDTask WaitPhysicsFrame(Node node, bool physics = false)
+        => WaitFrame(node, 1, true);
+        
+    public static GDTask WaitPhysicsFrame(Node node, int frames, CancellationToken ct)
+        => WaitFrame(node, frames, ct, true);
+        
+    public static GDTask WaitPhysicsFrame(Node node, CancellationToken ct, bool physics = false)
+        => WaitFrame(node, 1, ct, true);
         
     // wait a GDTask bind with internal node
 
     public static GDTask Wait(Node node, GDTask task, bool physics = false)
-        => Delegate(node, () => task.Status.IsCompleted(), physics);
+        => WaitUntil(node, () => task.Status.IsCompleted(), physics);
         
     public static GDTask Wait(Node node, GDTask task, CancellationToken ct, bool physics = false)
-        => Delegate(node, () => task.Status.IsCompleted(), ct, physics);
+        => WaitUntil(node, () => task.Status.IsCompleted(), ct, physics);
 
     public static async GDTask<T> Wait<T>(Node node, GDTask<T> task, bool physics = false)
     {
-        await Delegate(node, () => task.Status.IsCompleted(), physics);
+        await WaitUntil(node, () => task.Status.IsCompleted(), physics);
         return task.GetAwaiter().GetResult();
     }
     
     public static async GDTask<T> Wait<T>(Node node, GDTask<T> task, CancellationToken ct, bool physics = false)
     {
-        await Delegate(node, () => task.Status.IsCompleted(), ct, physics);
+        await WaitUntil(node, () => task.Status.IsCompleted(), ct, physics);
         return task.GetAwaiter().GetResult();
     }
 
@@ -198,14 +280,14 @@ public static partial class Async
         => Wait(node, task, ct, true);
 
     public static GDTask WaitProcess(Node node, GDTask task, Action<double> process, bool physics = false)
-        => DelegateProcess(node, (delta) =>
+        => WaitUntil(node, (delta) =>
         {
             process.Invoke(delta);
             return task.Status.IsCompleted();
         }, physics);
         
     public static GDTask WaitProcess(Node node, GDTask task, Action<double> process, CancellationToken ct, bool physics = false)
-        => DelegateProcess(node, (delta) =>
+        => WaitUntil(node, (delta) =>
         {
             process.Invoke(delta);
             return task.Status.IsCompleted();
@@ -213,7 +295,7 @@ public static partial class Async
         
     public static async GDTask<T> WaitProcess<T>(Node node, GDTask<T> task, Action<double> process, bool physics = false)
     {
-        await DelegateProcess(node, (delta) =>
+        await WaitUntil(node, (delta) =>
         {
             process.Invoke(delta);
             return task.Status.IsCompleted();
@@ -223,7 +305,7 @@ public static partial class Async
     
     public static async GDTask<T> WaitProcess<T>(Node node, GDTask<T> task, Action<double> process, CancellationToken ct, bool physics = false)
     {
-        await DelegateProcess(node, (delta) =>
+        await WaitUntil(node, (delta) =>
         {
             process.Invoke(delta);
             return task.Status.IsCompleted();
@@ -283,6 +365,11 @@ public static partial class Async
         public void Act(double delta)
         {
             Action?.Invoke(delta);
+            if (!IsInstanceValid(Tween))
+            {
+                EmitSignal(SignalName.Finished);
+                QueueFree();
+            }
             if (!Tween.CustomStep(delta))
             {
                 EmitSignal(SignalName.Finished);
@@ -312,16 +399,44 @@ public static partial class Async
         node.AddChild(tweenNode, false, Node.InternalMode.Front);
         return tweenNode;
     }
+    
+    private static AsyncTweenNode CreateTweenNode(Node node, Tween tween, Action<double> action,
+        CancellationToken ct, bool physics = false)
+    {
+        AsyncTweenNode tweenNode = new()
+        {
+            Tween = tween,
+            IsPhysics = physics
+        };
+        tweenNode.Action = delta =>
+        {
+            if (ct.IsCancellationRequested)
+            {
+                tween.Kill();
+                return;
+            }
+            
+            action?.Invoke(delta);
+        };
+        tween.Pause();
+        tween.BindNode(tweenNode);
+
+        tweenNode.BindParent(node);
+        node.AddChild(tweenNode, false, Node.InternalMode.Front);
+        return tweenNode;
+    }
 
     public static async GDTask WaitProcess(Node node, Tween tween, Action<double> process, bool physics = false)
     {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var tweenNode = CreateTweenNode(node, tween, process, physics);
         await GDTask.ToSignal(tweenNode, AsyncTweenNode.SignalName.Finished);
     }
     
     public static async GDTask WaitProcess(Node node, Tween tween, Action<double> process, CancellationToken ct, bool physics = false)
     {
-        var tweenNode = CreateTweenNode(node, tween, process, physics);
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var tweenNode = CreateTweenNode(node, tween, process, ct, physics);
         await GDTask.ToSignal(tweenNode, AsyncTweenNode.SignalName.Finished, ct);
     }
 
@@ -347,6 +462,7 @@ public static partial class Async
 
     public static async GDTask Repeat(Node node, double time, int count, Action action, bool physics = false)
     {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var timer = node.ActionRepeat(time, action, physics);
         for (int i = 0; i < count; i++)
         {
@@ -357,7 +473,13 @@ public static partial class Async
     
     public static async GDTask Repeat(Node node, double time, int count, Action action, CancellationToken ct, bool physics = false)
     {
+        if (!GodotObject.IsInstanceValid(node)) return;
         var timer = node.ActionRepeat(time, action, physics);
+        timer.AddProcess(() =>
+        {
+            if (ct.IsCancellationRequested) timer.QueueFree();
+        }, physics);
+        
         for (int i = 0; i < count; i++)
         {
             await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);

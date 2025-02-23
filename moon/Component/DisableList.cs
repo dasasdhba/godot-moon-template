@@ -8,7 +8,7 @@ namespace Component;
 /// </summary>
 public class DisableList
 {
-    private List<string> List = [];
+    private HashSet<string> List = [];
     
     public Action OnDisabled { private get; init; }
     public Action OnEnabled { private get; init; }

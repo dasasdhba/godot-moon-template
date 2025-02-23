@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Utils;
+﻿using System.Collections.Generic;
 
 namespace Godot;
 
 [GlobalClass]
 public partial class BTSubRoot : BTNode
 {
-    public BTRoot Root { get ;set; }
-
     protected int CurrentIndex { get; set; } = 0;
     protected BTNode CachedNode { get; set; }
     protected bool ReadyHint {  get; set; } = false;
@@ -16,6 +12,13 @@ public partial class BTSubRoot : BTNode
     protected List<BTNode> BTNodes { get; set; } = new();
 
     public override void _Ready() => Persistent = true;
+
+    public override void BTReset()
+    {
+        CurrentIndex = 0;
+        CachedNode = null;
+        ReadyHint = false;
+    }
 
     public override void BTReady()
     {
@@ -52,7 +55,9 @@ public partial class BTSubRoot : BTNode
         if (IsInstanceValid(CachedNode))
             CachedNode.QueueFree();
     }
-
+    
+    private BTNode CurrentBTNode;
+    
     public override bool BTProcess(double delta)
     {
         if (CurrentIndex >= BTNodes.Count)
@@ -64,6 +69,7 @@ public partial class BTSubRoot : BTNode
         var node = BTNodes[CurrentIndex];
         if (!node.Persistent)
             node = GetCacheNode(node);
+        CurrentBTNode = node;    
         
         if (!ReadyHint)
         {
@@ -75,6 +81,7 @@ public partial class BTSubRoot : BTNode
         if (node.BTProcess(delta))
         {
             node.BTFinish();
+            CurrentBTNode = null;
             ReadyHint = false;
             if (node.End)
             {
@@ -99,15 +106,22 @@ public partial class BTSubRoot : BTNode
         return false;
     }
 
+    public override void BTStop()
+    {
+        CurrentBTNode?.BTStop();
+        ClearCache();
+    }
+
     public BTSubRoot() : base()
     {
         ChildEnteredTree += (Node node) =>
         {
             if (node is BTNode bt)
+            {
+                bt.Root = Root;
                 BTNodes.Add(bt);
-
-            if (node is BTSubRoot sub)
-                sub.Root = Root;
+            }
+            
         };
 
         ChildExitingTree += (Node node) =>

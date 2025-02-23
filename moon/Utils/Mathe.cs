@@ -74,9 +74,8 @@ public static partial class Mathe
     {
         var len = max - min;
         var half = len / 2d;
-        while (current - target > half) target += len;
-        while (current - target < -half) target -= len;
-        return Mathf.MoveToward(current, target, delta);
+        var diff = Mathf.Wrap(current - target, -half, half);
+        return Mathf.MoveToward(current, current - diff, delta);
     }
     
     /// <summary>
@@ -86,9 +85,8 @@ public static partial class Mathe
     {
         var len = max - min;
         var half = len / 2f;
-        while (current - target > half) target += len;
-        while (current - target < -half) target -= len;
-        return Mathf.MoveToward(current, target, delta);
+        var diff = Mathf.Wrap(current - target, -half, half);
+        return Mathf.MoveToward(current, current - diff, delta);
     }
     
     /// <summary>
