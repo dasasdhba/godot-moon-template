@@ -1,4 +1,7 @@
-﻿using Component;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Component;
 using Godot;
 using Godot.Collections;
 using GodotTask;
@@ -23,6 +26,9 @@ public partial class SceneSingleton : CanvasLayer
     
     [Signal]
     public delegate void TransOutEndedEventHandler();
+    
+    [Signal]
+    public delegate void SceneLoadedEventHandler();
     
     [Signal]
     public delegate void SceneChangedEventHandler();
@@ -64,18 +70,46 @@ public partial class SceneSingleton : CanvasLayer
     private bool _Loading = false;
     public bool IsLoading() => _Loading;
 
-    public async GDTask LoadScene(string path)
+    public async GDTask<Node> LoadScene(string path)
     {
         _Loading = true;
         
+        Node result = null;
+        
+        var pack = await Moon.LoadAsync<PackedScene>(path);
         await GDTask.RunOnThreadPool(() =>
         {
-            var pack = GD.Load<PackedScene>(path);
-            CurrentScene = pack.InstantiateSafely();
-            CurrentScenePath = path;
+            result = pack.InstantiateSafely();
         });
         
         _Loading = false;
+        
+        return result;
+    }
+    
+    public async GDTask<Node> LoadScene(string path, CancellationToken ct)
+    {
+        _Loading = true;
+        
+        Node result = null;
+
+        try
+        {
+            var pack = await Moon.LoadAsync<PackedScene>(path, ct);
+            await GDTask.RunOnThreadPool(() =>
+            {
+                result = pack.InstantiateSafely();
+            }, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            result?.QueueFree();
+            result = null;
+        }
+        
+        _Loading = false;
+        
+        return result;
     }
 
     public bool IsTrans() => IsInstanceValid(TransNode);
@@ -177,25 +211,46 @@ public partial class SceneSingleton : CanvasLayer
     private bool _ChangeHint;
     public bool IsChanging() => _ChangeHint;
 
-    public void ChangeTo(string path, SceneTrans trans = null)
+    public bool ChangeTo(string path, SceneTrans trans = null)
     {
-        if (_ChangeHint) return;
+        if (_ChangeHint) return false;
         _ChangeHint = true;
         
         ChangeToAsync(GetScenePath(path), trans).Forget();
+        return true;
     }
+    
+    public bool Reload(SceneTrans trans = null)
+        => ChangeTo("", trans);
 
-    private async GDTask ChangeToAsync(string path, SceneTrans trans = null)
+    public bool ChangeTo(Func<GDTask<Node>> loadTask, SceneTrans trans = null)
+    {
+        if (_ChangeHint) return false;
+        _ChangeHint = true;
+        
+        ChangeToAsync(loadTask.Invoke(), trans).Forget();
+        return true;
+    }
+    
+    private GDTask ChangeToAsync(string path, SceneTrans trans = null)
+        => ChangeToAsync(LoadScene(path), trans);
+
+    private async GDTask ChangeToAsync(GDTask<Node> loadTask, SceneTrans trans = null)
     {
         var current = CurrentScene;
-        var load = LoadScene(path);
+        
         if (trans != null && !IsTransIn()) await TransInAsync(trans);
         if (current != null)
         {
             current.Name = "@OldScene";
             current.QueueFree();
         }
-        await load;
+        
+        var scene = await loadTask;
+        CurrentScene = scene;
+        CurrentScenePath = scene.SceneFilePath;
+        EmitSignal(SignalName.SceneLoaded);
+        
         MainViewport.AddChild(CurrentScene);
         await CurrentScene.OnReadyAsync();
         _ChangeHint = false;
@@ -204,19 +259,24 @@ public partial class SceneSingleton : CanvasLayer
     }
 
     public string GetScenePath(string path)
+       => GetRelativeScenePath(path, CurrentScenePath);
+    
+    public static string GetRelativeScenePath(string path, string current)
     {
-        if (path is null or "") return CurrentScenePath;
+        if (path is null or "") return current;
         
         if (path.StartsWith('@'))
         {
-            var current = CurrentScenePath;
-            var index = current.LastIndexOf('_');
-            return current[..(index + 1)] + path[1..] + ".tscn";
+            return GetBaseScenePath(current) + '_' + path[1..] + ".tscn";
         }
 
         return path;
     }
 
-    public void Reload(SceneTrans trans = null)
-        => ChangeTo("", trans);
+    public static string GetBaseScenePath(string path)
+    {
+        var index = path.LastIndexOf('_');
+        if (index < 0) return path;
+        return path[..index];
+    }
 }

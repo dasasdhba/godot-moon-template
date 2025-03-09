@@ -100,8 +100,7 @@ public class AsyncLoader
     private async GDTask AsyncInit(int count)
     {
         await Root.OnReadyAsync();
-        Scene ??= await GDTask.RunOnThreadPool(() 
-            => GD.Load<PackedScene>(ScenePath));
+        Scene ??= await Moon.LoadAsync<PackedScene>(ScenePath);
         AddCreateTask(count).Forget();
     }
 

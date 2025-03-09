@@ -18,7 +18,12 @@ public partial class MarkerFlipSync : Marker2D
     
     public bool FlipH { get; set; } = false;
     public bool FlipV { get; set; } = false;
-    protected Vector2 Origin { get; set; }
+    public Vector2 Origin { get; set; }
+
+    public override void _EnterTree()
+    {
+        this.AddProcess(Update, () => ProcessCallback == MarkerFlipSyncProcessCallback.Physics);
+    }
 
     public override void _Ready()
     {
@@ -34,7 +39,6 @@ public partial class MarkerFlipSync : Marker2D
             AnimNode = group;
         
         Update();
-        this.AddProcess(Update, () => ProcessCallback == MarkerFlipSyncProcessCallback.Physics);
     }
 
     public void Update()

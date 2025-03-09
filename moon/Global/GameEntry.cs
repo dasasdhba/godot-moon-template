@@ -19,7 +19,7 @@ public partial class GameEntry : Node
         GameStart().Forget();
     }
 
-    private string GetFirstScene()
+    protected string GetFirstScene()
     {
     #if TOOLS
         var path = Editor.Addon.MoonDebug.DebugFilePath;
@@ -36,7 +36,7 @@ public partial class GameEntry : Node
         return FirstScenePath;    
     }
 
-    private async GDTask GameStart()
+    protected virtual async GDTask GameStart()
     {
         await GameInit();
         var scene = GetFirstScene();

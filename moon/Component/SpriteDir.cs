@@ -1,3 +1,4 @@
+using Global;
 using Godot;
 using Utils;
 
@@ -32,12 +33,7 @@ public partial class SpriteDir : Node, IFlipInit
     public override void _EnterTree()
     {
         if (Sprite == null && GetParent() is CanvasItem parent) Sprite = parent;
-        if (Root != null && Root is not IPlatformer2D)
-        {
-            Recorder = new() { Target = Root };
-            Recorder.BindParent(this);
-            AddChild(Recorder);
-        }
+        if (Root != null) Recorder = Root.GetRecorder();
     }
 
     public void FlipInit()
@@ -51,12 +47,7 @@ public partial class SpriteDir : Node, IFlipInit
 
     public override void _PhysicsProcess(double delta)
     {
-        if (Root is IPlatformer2D platformer)
-        {
-            var s = platformer.GetLastMoveSpeed();
-            if (s != 0f) SetSpriteFlip(s < 0f);
-        }
-        else if (Root != null)
+        if (Root != null)
         {
             var s = Recorder.GetLastMotion().X;
             if (s != 0f) SetSpriteFlip(s < 0f);
@@ -69,9 +60,7 @@ public partial class SpriteDir : Node, IFlipInit
         
         var result = Flip ? !value : value;
         
-        if (Sprite is Sprite2D sprite) sprite.FlipH = result;
-        else if (Sprite is AnimatedSprite2D anim) anim.FlipH = result;
-        else if (Sprite is AnimGroup2D group) group.FlipH = result;
+        Sprite.TrySetFlipH(result);
         
         if (Rotator != null) Rotator.Flip = result;
     }

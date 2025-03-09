@@ -48,8 +48,18 @@ public abstract partial class Inputer : Node
 
     public void SetKeyBuffered(string key) => BufferMaps[key] = true;
 
-    public void BufferProcess()
+    private void BufferProcess()
     {
+        if (!CanProcess())
+        {
+            foreach (var key in BufferPauseGuards)
+            {
+                SetKeyBuffered(key);
+            }
+            
+            return;
+        }
+        
         var dict = BufferMaps;
         foreach (var key in dict.Keys)
         {
@@ -58,35 +68,13 @@ public abstract partial class Inputer : Node
             dict[key] = GetKey(key).Pressed;
         }
     }
-    
-    // add buffer guards when paused
-    private partial class BufferPauseNode : Node
-    {
-        private Inputer Inputer;
-    
-        public BufferPauseNode(Inputer inputer) : base()
-        {
-            Inputer = inputer;
-            ProcessMode = ProcessModeEnum.Always;
-        }
-
-        public override void _PhysicsProcess(double delta)
-        {
-            if (Inputer.CanProcess()) return;
-            
-            foreach (var key in Inputer.BufferPauseGuards)
-            {
-                Inputer.SetKeyBuffered(key);
-            }
-        }
-    }
 
     public Inputer() : base()
     {
         TreeEntered += () =>
         {
-            AddChild(new BufferPauseNode(this));
-            this.AddProcess(BufferProcess, () => BufferProcessMode == InputBufferProcessCallback.Physics);
+            this.AddProcess(BufferProcess, () => BufferProcessMode == InputBufferProcessCallback.Physics)
+                .ProcessMode = ProcessModeEnum.Always;
         };
     }
 }

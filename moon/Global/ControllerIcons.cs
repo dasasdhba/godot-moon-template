@@ -8,11 +8,7 @@ namespace Global;
 /// </summary>
 public static class ControllerIcons
 {
-    public static Node Singleton
-    {
-        get => Moon.Singleton.GetNode("/root/ControllerIcons");
-        private set { }
-    }
+    public static Node Singleton => Moon.Singleton.GetNode("/root/ControllerIcons");
 
     private const string TexturePath = "res://addons/controller_icons/objects/ControllerIconTexture.gd";
     private const string AssetRoot = "res://addons/controller_icons/assets/";

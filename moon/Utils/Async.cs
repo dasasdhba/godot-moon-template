@@ -463,7 +463,7 @@ public static partial class Async
     public static async GDTask Repeat(Node node, double time, int count, Action action, bool physics = false)
     {
         if (!GodotObject.IsInstanceValid(node)) return;
-        var timer = node.ActionRepeat(time, action, physics);
+        var timer = node.ActionRepeat(time, action, true, physics);
         for (int i = 0; i < count; i++)
         {
             await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
@@ -474,7 +474,7 @@ public static partial class Async
     public static async GDTask Repeat(Node node, double time, int count, Action action, CancellationToken ct, bool physics = false)
     {
         if (!GodotObject.IsInstanceValid(node)) return;
-        var timer = node.ActionRepeat(time, action, physics);
+        var timer = node.ActionRepeat(time, action, true, physics);
         timer.AddProcess(() =>
         {
             if (ct.IsCancellationRequested) timer.QueueFree();

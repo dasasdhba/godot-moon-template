@@ -23,8 +23,6 @@ public partial class AsepriteImporter : EditorPlugin
     public AsepriteImporter() : base()
     {
         Config = new(EditorInterface.Singleton.GetEditorSettings());
-        Config.AddSettings();
-
         Command = new(Config);
         ResourceFilesystem = EditorInterface.Singleton.GetResourceFilesystem();
         
@@ -34,7 +32,8 @@ public partial class AsepriteImporter : EditorPlugin
     public override void _EnterTree()
     {
         base._EnterTree();
-
+        
+        Config.AddSettings();
         Importer = new();
         AddImportPlugin(Importer);
     }
@@ -42,11 +41,17 @@ public partial class AsepriteImporter : EditorPlugin
     public override void _ExitTree()
     {
         base._ExitTree();
-
-        Config.RemoveSettings();
+        
         RemoveImportPlugin(Importer);
     }
-    
+
+    public override void _DisablePlugin()
+    {
+        base._DisablePlugin();
+        
+        Config.RemoveSettings();
+    }
+
     private const double ScanDelayTime = 0.8d;
     private double ScanTimer = 0d;
     private bool ScanScheduled = false;

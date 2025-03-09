@@ -107,6 +107,13 @@ public static class MoonExtensions
     
     public static string GetUniquePath(this Node node)
         => Moon.Scene.MainViewport.GetPathTo(node);
+
+    public static Tween CreatePhysicsTween(this Node node)
+    {
+        var tween = node.CreateTween();
+        tween.SetProcessMode(Tween.TweenProcessMode.Physics);
+        return tween;
+    }
     
     public static T FindParent<T>(this Node node, Func<T, bool> filter = null) where T : Node
     {
@@ -209,6 +216,36 @@ public static class MoonExtensions
         node.TryInitFlip();
         node.SetChildrenRecursively(TryInitFlip);
     }
+
+    public static bool TryGetFlipH(this Node node)
+    {
+        var flip = node.Get(Sprite2D.PropertyName.FlipH);
+        if (flip.VariantType != Variant.Type.Nil)
+        {
+            return flip.AsBool();
+        }
+        flip = node.Get(AnimGroup2D.PropertyName.FlipH);
+        if (flip.VariantType != Variant.Type.Nil)
+        {
+            return flip.AsBool();
+        }
+        
+        return false;
+    }
+    
+    public static void TrySetFlipH(this Node node, bool value)
+    {
+        var flip = node.Get(Sprite2D.PropertyName.FlipH);
+        if (flip.VariantType != Variant.Type.Nil)
+        {
+            node.Set(Sprite2D.PropertyName.FlipH, value);
+        }
+        flip = node.Get(AnimGroup2D.PropertyName.FlipH);
+        if (flip.VariantType != Variant.Type.Nil)
+        {
+            node.Set(AnimGroup2D.PropertyName.FlipH, value);
+        }
+    }
     
     #endregion
     
@@ -273,6 +310,22 @@ public static class MoonExtensions
     {
         if (item.Material is not ShaderMaterial shader) return default;
         return shader.GetShaderParameter(param) is T t ? t : default;
+    }
+    
+    private const string RecorderTag = "_CanvasItemRecorder";
+
+    public static void AddRecorder(this CanvasItem item)
+    {
+        if (item.HasData(RecorderTag));
+        var recorder = new MotionRecorder2D() { Target = item };
+        item.AddChild(recorder);
+        item.SetData(RecorderTag, recorder);
+    }
+
+    public static MotionRecorder2D GetRecorder(this CanvasItem item)
+    {
+        if (!item.HasData(RecorderTag)) item.AddRecorder();
+        return item.GetData<MotionRecorder2D>(RecorderTag);
     }
     
     #endregion

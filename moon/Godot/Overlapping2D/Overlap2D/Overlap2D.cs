@@ -72,28 +72,21 @@ public partial class Overlap2D
 
     /// <summary>
     /// Using the node's space as the physics space.
-    /// Should be called at least in <c>Node._EnterTree()</c>,
-    /// or <c>Node.GetViewport()</c> will return null.
     /// </summary>
     /// <param name="node">The node to query space.</param>
     public void SetSpace(Node node)
     {
-        Rid space;
-        if (node is Area2D area)
-        {
-            space = PhysicsServer2D.AreaGetSpace(area.GetRid());
-        }
-        else if (node is PhysicsBody2D body)
-        {
-            space = PhysicsServer2D.BodyGetSpace(body.GetRid());
-        }
+        if (node.IsInsideTree()) SetSpaceInTree(node);
         else
         {
-            space = node.GetViewport().FindWorld2D().Space;
+            node.Connect(Node.SignalName.TreeEntered, 
+                Callable.From(() => SetSpaceInTree(node)),
+                (int)GodotObject.ConnectFlags.OneShot);
         }
-
-        SetSpace(space);
     }
+
+    private void SetSpaceInTree(Node node)
+        => SetSpace(node.GetViewport().FindWorld2D().Space);
 
     public bool GetCollisionMaskValue(int layer)
         => ((CollisionMask >> (layer - 1)) & 1) == 1;

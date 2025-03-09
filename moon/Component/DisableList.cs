@@ -32,4 +32,7 @@ public class DisableList
     }
     
     public bool IsDisabled() => List.Count > 0;
+    
+    public bool HasReason(string reason) => List.Contains(reason);
+    public void Clear() => List.Clear();
 }

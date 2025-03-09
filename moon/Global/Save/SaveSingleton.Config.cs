@@ -4,31 +4,42 @@ using GodotTask;
 
 namespace Global;
 
-
-public partial class SaveSingleton : Node
+public partial class SaveSingleton
 {
+    [ExportGroup("Language")]
+    [Export]
+    public Array<string> SupportedLanguages { get ;set; } = [ "zh" ];
+    
+    [Export]
+    public string FallbackLanguage { get; set; } = "zh";
+    
+    public void SetLanguage(string locale)
+    {
+        if (!SupportedLanguages.Contains(locale)) locale = FallbackLanguage;
+        TranslationServer.SetLocale(locale);
+    }
+    
+    public static bool Effect { get ;set; } = true;
+    
     private const string ConfigFileName = "Settings";
     private const string ConfigFileSuffix = "ini";
-
-    public static bool Effect { get ;set; } = true;
-
+    
     private static string GetConfigPath()
         => GetGamePath() + "/" + ConfigFileName + "." + ConfigFileSuffix;
-    
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
-        LoadConfig();
+        LoadConfig().Forget();
     }
 
-    public static void LoadConfig()
+    private async GDTask LoadConfig()
     {
         ConfigFile config = new();
         if (config.Load(GetConfigPath()) != Error.Ok)
         {
             // reset
-            string locale = OS.GetLocaleLanguage() == "zh" ? "zh" : "en";
-            TranslationServer.SetLocale(locale);
+            SetLanguage(OS.GetLocale());
+            var locale = TranslationServer.GetLocale();
             config.SetValue("Setting", "Music", 100);
             config.SetValue("Setting", "Sound", 100);
             config.SetValue("Setting", "Fullscreen", false);
@@ -43,7 +54,10 @@ public partial class SaveSingleton : Node
                 config.SetValue("Control", action, InputMap.ActionGetEvents(action));
             }
 
-            config.Save(GetConfigPath());
+            await GDTask.RunOnThreadPool(() =>
+            {
+                config.Save(GetConfigPath());
+            });
         }
         else
         {
@@ -58,7 +72,7 @@ public partial class SaveSingleton : Node
             DisplayServer.WindowSetVsyncMode((bool)config.GetValue("Setting", "VSync", false) ?
                 DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled);
             Effect = (bool)config.GetValue("Setting", "Effect", true);
-            TranslationServer.SetLocale((string)config.GetValue("Setting", "Language", "en"));
+            SetLanguage((string)config.GetValue("Setting", "Language", FallbackLanguage));
             foreach (string action in InputMap.GetActions())
             {
                 // exclude build-in

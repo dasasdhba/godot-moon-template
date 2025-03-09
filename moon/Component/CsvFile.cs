@@ -18,7 +18,9 @@ public class CsvFile
         Data.Clear();
         while (!file.EofReached())
         {
-            var result = file.GetLine().Split(splitter);
+            var r = file.GetLine();
+            if (r == "") continue;
+            var result = r.Split(splitter);
             Data.Add(result);
         }
         
