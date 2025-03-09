@@ -94,4 +94,7 @@ public abstract partial class OverlapManager2D : Overlap2D
     
     public bool IsOverlappingWith(GodotObject col, Vector2 deltaPos = default, bool excludeOthers = false)
         => IsOverlapping(result => result.Collider == col, deltaPos, excludeOthers);
+    
+    public bool IsOverlappingWith(Rid rid, Vector2 deltaPos = default, bool excludeOthers = false)
+        => IsOverlapping(result => result.Rid == rid, deltaPos, excludeOthers);
 }
