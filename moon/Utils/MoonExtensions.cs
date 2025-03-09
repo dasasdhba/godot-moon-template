@@ -318,7 +318,10 @@ public static class MoonExtensions
     {
         if (item.HasData(RecorderTag)) return;
         var recorder = new MotionRecorder2D() { Target = item };
-        item.AddChild(recorder);
+        if (item.IsNodeReady())
+            item.AddChild(recorder);
+        else
+            item.CallDeferred(Node.MethodName.AddChild, recorder);
         item.SetData(RecorderTag, recorder);
     }
 
@@ -328,6 +331,30 @@ public static class MoonExtensions
         return item.GetData<MotionRecorder2D>(RecorderTag);
     }
     
+    #endregion
+    
+    #region TileMap
+
+    public static bool HasLayer(this TileMap tilemap, string layer)
+    {
+        for (int i = 0; i < tilemap.GetLayersCount(); i++)
+        {
+            if (tilemap.GetLayerName(i) == layer) return true;
+        }
+        
+        return false;
+    }
+    
+    public static int GetLayerIndex(this TileMap tilemap, string layer)
+    {
+        for (int i = 0; i < tilemap.GetLayersCount(); i++)
+        {
+            if (tilemap.GetLayerName(i) == layer) return i;
+        }
+        
+        return -1;
+    }
+
     #endregion
     
     #region PhysicsBody
