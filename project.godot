@@ -25,6 +25,7 @@ buses/default_bus_layout="res://system/audio_bus.tres"
 GDTask="*res://moon/GDTask/PlayerLoopRunner/GDTaskPlayerLoopRunner.cs"
 ControllerIcons="*res://addons/controller_icons/ControllerIcons.gd"
 Moon="*res://system/moon.tscn"
+BetterTerrain="*res://addons/better-terrain/BetterTerrain.gd"
 
 [debug]
 
@@ -41,7 +42,7 @@ project/assembly_name="Moon"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/AsepriteImporter/plugin.cfg", "res://addons/MoonDebug/plugin.cfg", "res://addons/brush2d/plugin.cfg", "res://addons/controller_icons/plugin.cfg", "res://addons/texture_fonts/plugin.cfg")
+enabled=PackedStringArray("res://addons/AsepriteImporter/plugin.cfg", "res://addons/MoonDebug/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/brush2d/plugin.cfg", "res://addons/controller_icons/plugin.cfg", "res://addons/texture_fonts/plugin.cfg")
 
 [input]
 

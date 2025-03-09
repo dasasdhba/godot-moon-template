@@ -316,7 +316,7 @@ public static class MoonExtensions
 
     public static void AddRecorder(this CanvasItem item)
     {
-        if (item.HasData(RecorderTag));
+        if (item.HasData(RecorderTag)) return;
         var recorder = new MotionRecorder2D() { Target = item };
         item.AddChild(recorder);
         item.SetData(RecorderTag, recorder);
