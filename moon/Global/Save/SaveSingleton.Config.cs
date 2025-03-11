@@ -6,7 +6,13 @@ namespace Global;
 
 public partial class SaveSingleton
 {
-    [ExportGroup("Language")]
+    [ExportGroup("Config")]
+    [Export]
+    public string ConfigFileName { get ;set; } = "Settings";
+    
+    [Export]
+    public string ConfigFileSuffix { get ;set; } = "ini";
+    
     [Export]
     public Array<string> SupportedLanguages { get ;set; } = [ "zh" ];
     
@@ -21,10 +27,7 @@ public partial class SaveSingleton
     
     public static bool Effect { get ;set; } = true;
     
-    private const string ConfigFileName = "Settings";
-    private const string ConfigFileSuffix = "ini";
-    
-    private static string GetConfigPath()
+    private string GetConfigPath()
         => GetGamePath() + "/" + ConfigFileName + "." + ConfigFileSuffix;
 
     public override void _EnterTree()
@@ -85,7 +88,7 @@ public partial class SaveSingleton
         }
     }
 
-    public static async GDTask SaveConfig()
+    public async GDTask SaveConfig()
     {
         ConfigFile config = new();
         static int volume(float volumeDb) => (int)(Mathf.DbToLinear(volumeDb) * 100f);
