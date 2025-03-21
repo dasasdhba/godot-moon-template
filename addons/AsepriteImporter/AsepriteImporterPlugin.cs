@@ -16,7 +16,7 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
     public AsepriteImporterPlugin() : base() { }
 
     public override bool _CanImportThreaded()
-        => false;
+        => true;
     
     public override string _GetImporterName()
         => "aseprite_importer.plugin";
@@ -28,7 +28,7 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
         => new string[] { "aseprite", "ase" };
 
     public override string _GetSaveExtension()
-        => "tres";
+        => "res";
 
     public override string _GetResourceType()
         => "SpriteFrames";
@@ -107,18 +107,25 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
 
         if (spr == null) return Error.Failed;
             
-        ResourceSaver.Save(spr, savePath + ".tres");
+        ResourceSaver.Save(spr, savePath + "." + _GetSaveExtension());
 
         return Error.Ok;
     }
+    
+    private static AsepriteCommand Command => AsepriteImporter.Command;
+    private static EditorFileSystem ResourceFilesystem => AsepriteImporter.ResourceFilesystem;
 
     private SpriteFrames GenerateImportFiles(string sourceFile, Dictionary options)
     {
-        var Command = AsepriteImporter.Command;
-        var ResourceFilesystem = AsepriteImporter.ResourceFilesystem;
-
         if (Command == null || ResourceFilesystem == null)
             return null;
+            
+        var baseFile = GetBaseFile(sourceFile);
+        if (baseFile != sourceFile && FileAccess.FileExists(baseFile))
+        {
+            AsepriteImporter.Plugin.ScheduleReimport(baseFile);
+            return new();
+        }
 
         System.Collections.Generic.Dictionary<string, Variant> aseOpt = new()
         {
@@ -129,20 +136,22 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
 
         // generate texture and json
         
-        List<AsepriteFrames.FramesInfo> infos = new();
+        List<AsepriteFrames.FramesInfo> infos = [];
 
         foreach (var file in GetRelevantFiles(sourceFile))
         {
-            System.Collections.Generic.Dictionary<string, Variant> opt;
+            var opt = aseOpt;
             var loop = (bool)options["loop"];
             var tagOnly = (bool)options["tag_only"];
 
-            if (file != sourceFile && FileAccess.FileExists(file + ".import"))
+            if (file != sourceFile)
             {
-                ConfigFile config = new();
-                config.Load(file + ".import");
+                if (FileAccess.FileExists(file + ".import"))
+                {
+                    ConfigFile config = new();
+                    config.Load(file + ".import");
 
-                opt = new()
+                    opt = new()
                     {
                         {"exception_pattern", config.GetValue(
                             "params", "exclude_layers_pattern", "") },
@@ -152,12 +161,9 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
                             "params", "sheet_type", "Packed")) }
                     };
 
-                loop = (bool)config.GetValue("params", "loop", true);
-                tagOnly = (bool)config.GetValue("params", "tag_only", true);
-            }
-            else
-            {
-                opt = aseOpt;
+                    loop = (bool)config.GetValue("params", "loop", true);
+                    tagOnly = (bool)config.GetValue("params", "tag_only", true);
+                }
             }
 
             // generate
@@ -165,14 +171,13 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
             var outFile = Command.ExportFile(
                 file, file.GetBaseDir(), opt);
 
-            if (!outFile.ContainsKey("sprite_sheet"))
+            if (!outFile.TryGetValue("sprite_sheet", out var texPath))
             {
                 GD.PushError("Importing aseprite file failed, please check" +
                     "Aseprite Exec Path in editor settings.");
                 return null;
             }
             
-            var texPath = outFile["sprite_sheet"];
             var jsonPath = outFile["data_file"];
 
             infos.Add(new AsepriteFrames.FramesInfo(
@@ -200,7 +205,10 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
             
             if (AsepriteConfig.GetRemoveJson())
             {
-                DirAccess.RemoveAbsolute(jsonPath);
+                Callable.From(() =>
+                {
+                    DirAccess.RemoveAbsolute(jsonPath);
+                }).CallDeferred();
             }
         }
 
@@ -213,26 +221,33 @@ public partial class AsepriteImporterPlugin : EditorImportPlugin
     {
         var fileName = sourceFile.GetFile();
         var extLen = fileName.GetExtension().Length;
-        var BaseName = fileName[..^(extLen + 1)];
-        var dotPos = BaseName.LastIndexOf('.');
+        var baseName = fileName[..^(extLen + 1)];
+        var dotPos = baseName.LastIndexOf('.');
         if (dotPos == -1)
         {
-            return BaseName;
+            return baseName;
         }
-        return BaseName[..dotPos];
+        return baseName[..dotPos];
     }
 
     private static string GetAnimName(string sourceFile)
     {
         var fileName = sourceFile.GetFile();
         var extLen = fileName.GetExtension().Length;
-        var BaseName = fileName[..^(extLen + 1)];
-        var dotPos = BaseName.LastIndexOf('.');
+        var baseName = fileName[..^(extLen + 1)];
+        var dotPos = baseName.LastIndexOf('.');
         if (dotPos == -1)
         {
             return "Default";
         }
-        return BaseName[(dotPos + 1)..^0];
+        return baseName[(dotPos + 1)..];
+    }
+
+    private static string GetBaseFile(string sourceFile)
+    {
+        var fileName = sourceFile.GetFile();
+        var ext = fileName.GetExtension();
+        return sourceFile.GetBaseDir() + "/" + GetBaseName(sourceFile) + "." + ext;
     }
 
     private IEnumerable<string> GetRelevantFiles(string sourceFile)

@@ -143,7 +143,7 @@ public partial class SceneSingleton : CanvasLayer
             if (trans.InWaitTime > 0d)
                 TransTween.TweenInterval(trans.InWaitTime);
         
-            await Async.Wait(this, TransTween, ct);
+            await Async.WaitPhysics(this, TransTween, ct);
             EmitSignal(SignalName.TransInEnded);
         });
     }
@@ -195,7 +195,7 @@ public partial class SceneSingleton : CanvasLayer
                 TransTween.TweenMethod((double p) => TransNode.TransOutProcess(
                     trans.Interpolation(p)), 1d, 0d, trans.OutTime);
         
-            await Async.Wait(this, TransTween, ct);
+            await Async.WaitPhysics(this, TransTween, ct);
             TransNode.QueueFree();
             TransTween.Kill();
             EmitSignal(SignalName.TransOutEnded);

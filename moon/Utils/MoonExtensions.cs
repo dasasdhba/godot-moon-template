@@ -5,6 +5,7 @@ using System.Threading;
 using Component;
 using Global;
 using GodotTask;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Utils;
 

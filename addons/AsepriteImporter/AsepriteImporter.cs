@@ -1,5 +1,7 @@
 ﻿#if TOOLS
 
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Editor.Addon;
@@ -16,17 +18,30 @@ public partial class AsepriteImporter : EditorPlugin
     // since importer plugin has to be constructed parameterlessly
     // (weary)
     // we set up the required instance as static
-    public static AsepriteCommand Command { get; set; }
-    public static EditorFileSystem ResourceFilesystem { get; set; }
-    public static AsepriteImporter Plugin { get; set; }
+    public static AsepriteCommand Command { get; private set; }
+    public static EditorFileSystem ResourceFilesystem { get; private set; }
+    public static AsepriteImporter Plugin { get; private set; }
 
     public AsepriteImporter() : base()
     {
+        Plugin = this;
         Config = new(EditorInterface.Singleton.GetEditorSettings());
         Command = new(Config);
         ResourceFilesystem = EditorInterface.Singleton.GetResourceFilesystem();
         
-        Plugin = this;
+        ResourceFilesystem.ResourcesReimported += f =>
+        {
+            if (ReimportFiles.Count > 0)
+            {
+                ReimportScheduled = true;
+                ReimportTimer = ReimportDelayTime;
+            }
+
+            if (ScanTimer > 0d)
+            {
+                ScanScheduled = true;
+            }
+        };
     }
 
     public override void _EnterTree()
@@ -52,18 +67,37 @@ public partial class AsepriteImporter : EditorPlugin
         Config.RemoveSettings();
     }
 
-    private const double ScanDelayTime = 0.8d;
+    private const double ScanDelayTime = 0.5d;
     private double ScanTimer = 0d;
     private bool ScanScheduled = false;
-
-    public void ScheduleScan()
-    {
-        ScanScheduled = true;
-        ScanTimer = ScanDelayTime;
-    }
+    public void ScheduleScan() 
+        => ScanTimer = ScanDelayTime;
+    
+    private const double ReimportDelayTime = 0.5d;
+    private double ReimportTimer = 0d;
+    private bool ReimportScheduled = false;
+    private HashSet<string> ReimportFiles = [];
+    public void ScheduleReimport(string file)
+        => ReimportFiles.Add(file);
 
     public override void _Process(double delta)
     {
+        if (ResourceFilesystem.IsScanning()) return;
+    
+        if (ReimportScheduled && !ScanScheduled)
+        {
+            ReimportTimer -= delta;
+            if (ReimportTimer <= 0d)
+            {
+                ReimportScheduled = false;
+                if (ReimportFiles.Count > 0)
+                {
+                    ResourceFilesystem.ReimportFiles(ReimportFiles.ToArray());
+                    ReimportFiles.Clear();
+                }
+            }
+        }
+    
         if (!ScanScheduled) return;
         
         ScanTimer -= delta;

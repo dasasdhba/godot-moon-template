@@ -1,6 +1,7 @@
 ﻿#if TOOLS
 
 using System;
+using System.Collections.Generic;
 using Godot;
 using Godot.Collections;
 using System.Linq;
@@ -12,22 +13,18 @@ namespace Editor.Addon;
 /// </summary>
 public partial class AsepriteFrames
 {
-    public struct FramesInfo
+    public readonly struct FramesInfo(string t, Dictionary j, string a, bool l, bool tag)
     {
-        public string TexPath { get; set; }
-        public Dictionary Json { get; set; }
-        public string AnimName { get; set; }
-        public bool Loop { get; set; }
-        public bool TagOnly { get; set; }
-
-        public FramesInfo(string t, Dictionary j, string a, bool l, bool tag) =>
-            (TexPath, Json, AnimName, Loop, TagOnly) = (t, j, a, l, tag);
-
+        public string TexPath { get; } = t;
+        public Dictionary Json { get; } = j;
+        public string AnimName { get; } = a;
+        public bool Loop { get; } = l;
+        public bool TagOnly { get; } = tag;
     }
 
     private FramesInfo[] Infos;
 
-    public AsepriteFrames(System.Collections.Generic.IEnumerable<FramesInfo> infos) 
+    public AsepriteFrames(IEnumerable<FramesInfo> infos) 
         => Infos = infos.ToArray();
 
     public SpriteFrames Create()
@@ -56,11 +53,14 @@ public partial class AsepriteFrames
 
         var frames = (Array<Dictionary>)json["frames"];
         var tags = (Array<Dictionary>)((Dictionary)json["meta"])["frameTags"];
-
+        
         if (tags.Count > 0)
         {
             foreach (var tag in tags)
             {
+                var repeat = 0;
+                if (tag.TryGetValue("repeat", out var r)) repeat = (int)r;
+            
                 var name = (string)tag["name"];
                 if (!tagOnly)
                     name = info.AnimName + "." + name;
@@ -72,18 +72,18 @@ public partial class AsepriteFrames
 
                 var tagFrames = frames.ToArray()[from..(to + 1)];
 
-                AddFramesToAnimation(spr, info, name, tagFrames, dir);
+                AddFramesToAnimation(spr, info, repeat, name, tagFrames, dir);
             }
 
             return;
         }
 
-        AddFramesToAnimation(spr, info, info.AnimName, frames.ToArray());
+        AddFramesToAnimation(spr, info, 0, info.AnimName, frames.ToArray());
 
     }
 
     private static void AddFramesToAnimation(SpriteFrames spr, FramesInfo info,
-        string animName, Dictionary[] frames, string direction = "forward")
+        int repeat, string animName, Dictionary[] frames, string direction = "forward")
     {
         // oneshot support
         var oneshot = animName.EndsWith("_oneshot");
@@ -97,19 +97,46 @@ public partial class AsepriteFrames
         var minDuration = GetMinDuration(frames);
         var fps = GetFps(minDuration);
 
-        var loop = !oneshot && info.Loop;
+        var loop = !oneshot && repeat == 0 && info.Loop;
         spr.SetAnimationLoop(animName, loop);
         spr.SetAnimationSpeed(animName, fps);
 
         var reversed = direction is "reverse" or "pingpong_reverse";
+        var pingpong = direction.StartsWith("pingpong") && frames.Length > 2;
         var iFrames = reversed ? frames.Reverse() : frames;
-
-        if (direction.StartsWith("pingpong") && frames.Length > 2)
+        
+        if (repeat == 0)
         {
-            if (!reversed)
-                iFrames = iFrames.Concat(frames[1..^1].Reverse());
+            if (pingpong)
+            {
+                if (!reversed)
+                    iFrames = iFrames.Concat(frames[1..^1].Reverse());
+                else
+                    iFrames = iFrames.Concat(frames[1..^1]);
+            }
+        }
+        else if (repeat > 1)
+        {
+            var arr = iFrames.ToArray();
+            IEnumerable<Dictionary> result = [];
+            if (pingpong)
+            {
+                var forward = arr[1..];
+                var reverse = arr[..^1].Reverse().ToArray();
+                result = result.Concat(arr);
+                for (int i = 1; i < repeat; i++)
+                {
+                    result = result.Concat(i % 2 == 1 ? reverse : forward);
+                }
+            }
             else
-                iFrames = iFrames.Concat(frames[1..^1]);
+            {
+                for (int i = 0; i < repeat; i++)
+                {
+                    result = result.Concat(arr);
+                }
+            }
+            iFrames = result;
         }
 
         var texture = GD.Load<Texture2D>(info.TexPath);

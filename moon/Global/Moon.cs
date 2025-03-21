@@ -24,6 +24,13 @@ public partial class Moon : Node
     public static SceneSingleton Scene { get; private set; }
     
     private static object _ResourceLock = new();
+    public static T LoadSafely<T>(string path) where T : Resource
+    {
+        lock (_ResourceLock)
+        {
+            return GD.Load<T>(path);
+        }
+    }
 
     public static async GDTask<T> LoadAsync<T>(string path, CancellationToken ct = default) where T : Resource
     {
@@ -31,10 +38,7 @@ public partial class Moon : Node
 
         await GDTask.RunOnThreadPool(() =>
         {
-            lock (_ResourceLock)
-            {
-                result = GD.Load<T>(path);
-            }
+            result = LoadSafely<T>(path);
         }, ct);
         
         return result;

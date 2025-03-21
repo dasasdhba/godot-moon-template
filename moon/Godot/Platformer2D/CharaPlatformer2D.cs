@@ -180,12 +180,6 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
 
     public void PlatformerProcess(double delta)
     {
-        if (!InWaterFirst)
-        {
-            InWaterFirst = true;
-            IsInWater(true);
-        }
-
         var onFloorLast = IsOnFloor();
         var onCeilingLast = IsOnCeiling();
         var onWallLast = OnWall;
@@ -265,15 +259,21 @@ public partial class CharaPlatformer2D : CharacterBody2D, IPlatformer2D
             }
         }
 
-        // water update
-        
-        IsInWater(true);
-
         // signal
         
         if (!onFloorLast && IsOnFloor()) EmitSignal(SignalName.FloorCollided);
         if (!onCeilingLast && IsOnCeiling()) EmitSignal(SignalName.CeilingCollided);
         if (!onWallLast && OnWall) EmitSignal(SignalName.WallCollided, Math.Sign(moveSpeed));
+        
+        // water update
+        
+        IsInWater(true);
+        if (!InWaterFirst)
+        {
+            InWaterFirst = true;
+            return;
+        }
+        
         if (!inWaterLast && InWater) EmitSignal(SignalName.WaterEntered);
         if (inWaterLast && !InWater) EmitSignal(SignalName.WaterExited);
     }

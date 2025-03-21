@@ -44,7 +44,7 @@ public partial class NodePool : Node
 
     private Node CreatePoolNode()
     {
-        var node = PoolScene.Instantiate();
+        var node = PoolScene.InstantiateSafely();
         SetPool(node);
         
         return node;

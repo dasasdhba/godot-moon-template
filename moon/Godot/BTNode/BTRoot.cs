@@ -17,7 +17,7 @@ public partial class BTRoot : Node
     public enum BTRootProcessCallback { Idle, Physics }
 
     [Export]
-    public BTRootProcessCallback ProcessCallback { get; set; } = BTRootProcessCallback.Idle;
+    public BTRootProcessCallback ProcessCallback { get; set; } = BTRootProcessCallback.Physics;
     
     [Signal]
     public delegate void StartedEventHandler();
@@ -38,6 +38,8 @@ public partial class BTRoot : Node
     
     public void Start()
     {
+        if (Active) return;
+    
         CurrentIndex = 0;
         ReadyHint = false;
         ClearCache();

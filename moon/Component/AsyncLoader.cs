@@ -88,7 +88,7 @@ public class AsyncLoader
 
     private void Init(int count)
     {
-        Scene ??= GD.Load<PackedScene>(ScenePath);
+        Scene ??= Moon.LoadSafely<PackedScene>(ScenePath);
         var stack = LoadedStackDict[ScenePath];
         foreach (var r in Scene.InstantiateSafely(count))
         {

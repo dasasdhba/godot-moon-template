@@ -24,9 +24,7 @@ public partial class AsepriteCommand
         {
             OS.Execute(asepritePath, new string[] { "--version" }, new Godot.Collections.Array(), true);
         }
-#pragma warning disable CS0168 // Variable is declared but never used
-        catch(Exception _)
-#pragma warning restore CS0168 // Variable is declared but never used
+        catch(Exception)
         {
             GD.PushWarning("invalid Aseprite exec path, please set it up in " +
                 "Editor->Editor Setting->Aseprite->General");
@@ -61,8 +59,7 @@ public partial class AsepriteCommand
         var spriteSheet = outputFile + ".png";
         
         var sourceName = ProjectSettings.GlobalizePath(fileName);
-        Godot.Collections.Array<string> arguments = 
-            GetCommandArguments(sourceName, dataFile, spriteSheet);
+        var arguments = GetCommandArguments(sourceName, dataFile, spriteSheet).ToList();
 
         if (!onlyVisibleLayers)
             arguments.Insert(0, "--all-layers");
@@ -70,7 +67,7 @@ public partial class AsepriteCommand
         AddSheetTypeArguments(arguments, options);
         AddIgnoreLayerArguments(sourceName, arguments, exceptionPattern);
 
-        Godot.Collections.Array output = new();
+        Godot.Collections.Array output = [];
         if (Execute(arguments.ToArray(), output) != 0)
         {
             GD.PushError("Aseprite: failed to export layer spritesheet");
@@ -88,13 +85,12 @@ public partial class AsepriteCommand
     private int Execute(string[] arguments, Godot.Collections.Array output)
         => OS.Execute(Config.GetAsepritePath(), arguments, output, true, true);
 
-    private static Godot.Collections.Array<string> GetCommandArguments(
-    string sourceName, string dataPath, string spritesheetPath)
+    private static string[] GetCommandArguments(
+        string sourceName, string dataPath, string spritesheetPath)
     {
         if (spritesheetPath == "")
         {
-            return new Godot.Collections.Array<string>()
-            {
+            return [
                 "-b",
                 "--list-tags",
                 "--data",
@@ -102,22 +98,20 @@ public partial class AsepriteCommand
                 "--format",
                 "json-array",
                 sourceName
-            };
+            ];
         }
 
         if (dataPath == "")
         {
-            return new Godot.Collections.Array<string>()
-            {
+            return [
                 "-b",
                 "--sheet",
                 spritesheetPath,
                 sourceName
-            };
+            ];
         }
 
-        return new Godot.Collections.Array<string>()
-        {
+        return [
             "-b",
             "--list-tags",
             "--data",
@@ -127,21 +121,21 @@ public partial class AsepriteCommand
             "--sheet",
             spritesheetPath,
             sourceName
-        };
+        ];
     }
 
     private static string GetFileBasename(string filepath)
     {
-        var fileName = StringExtensions.GetFile(filepath);
-        var extLen = StringExtensions.GetExtension(fileName).Length;
+        var fileName = filepath.GetFile();
+        var extLen = fileName.GetExtension().Length;
         return fileName[..^(extLen + 1)];
     }
 
     private static void AddSheetTypeArguments(
-        Godot.Collections.Array<string> arguments, Dictionary<string, Variant> options)
+        List<string> arguments, IReadOnlyDictionary<string, Variant> options)
     {
         var count = 0;
-        if (options.TryGetValue("column_count", out Variant var))
+        if (options.TryGetValue("column_count", out var var))
             count = (int)var;
 
         if (count > 0)
@@ -157,10 +151,9 @@ public partial class AsepriteCommand
     }
 
     private void AddIgnoreLayerArguments(string sourceName,
-        Godot.Collections.Array<string> arguments, string exceptionPattern)
+        List<string> arguments, string exceptionPattern)
     {
-        Godot.Collections.Array<string> layers = 
-            GetExceptionLayers(sourceName, exceptionPattern);
+        var layers = GetExceptionLayers(sourceName, exceptionPattern);
 
         if (layers.Count == 0)
             return;
@@ -173,16 +166,15 @@ public partial class AsepriteCommand
 
     }
 
-    private Godot.Collections.Array<string> GetLayers(
+    private List<string> GetLayers(
         string sourceName, bool onlyVisible = false)
     {
-        Godot.Collections.Array output = new();
-        Godot.Collections.Array<string> arguments = new()
-        {
+        Godot.Collections.Array output = [];
+        List<string> arguments = [
             "-b",
             "--list-layers",
             sourceName
-        };
+        ];
 
         if (!onlyVisible)
             arguments.Insert(0, "--all-layers");
@@ -191,23 +183,23 @@ public partial class AsepriteCommand
         {
             GD.PushError("Aseprite: failed listing layers.");
             GD.PushError(output);
-            return new Godot.Collections.Array<string>();
+            return [];
         }
 
         if (output.Count == 0)
-            return new Godot.Collections.Array<string>();
+            return [];
 
-        Godot.Collections.Array<string> result = new();
+        List<string> result = [];
         foreach (var str in output[0].ToString().Split('\n'))
-            result.Add(StringExtensions.StripEdges(str));
+            result.Add(str.StripEdges());
 
         return result;
     }
 
-    private Godot.Collections.Array<string> GetExceptionLayers(
+    private List<string> GetExceptionLayers(
         string sourceName, string exceptionPattern)
     {
-        Godot.Collections.Array<string> result = new();
+        List<string> result = [];
 
         var layers = GetLayers(sourceName);
         var regex = CompileRegex(exceptionPattern);
