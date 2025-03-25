@@ -1,16 +1,19 @@
 using Godot;
 using Utils;
 
-namespace Game;
+namespace Component;
 
 [GlobalClass]
 public partial class OverlapReceiver : Node
 {
-    public const string RefTag = "OverlapReceiver";
-    public static bool HasRef(GodotObject node)
-        => node.HasData(RefTag);
-    public static OverlapReceiver GetRef(GodotObject node)
-        => node.GetData<OverlapReceiver>(RefTag);
+    private const string RefTag = "OverlapReceiver";
+    public static bool HasRef(GodotObject node, string key = "")
+        => node.HasData($"{RefTag}_{key}");
+    public static OverlapReceiver GetRef(GodotObject node, string key = "")
+        => node.GetData<OverlapReceiver>($"{RefTag}_{key}");
+    
+    protected virtual string GetReceiverKey() => "";
+    private string GetDataKey() => $"{RefTag}_{GetReceiverKey()}";
     
     [ExportCategory("OverlapReceiver")]
     [Export]
@@ -21,8 +24,8 @@ public partial class OverlapReceiver : Node
         {
             if (_Body != value)
             {
-                _Body?.RemoveData(RefTag);
-                value?.SetData(RefTag, this);
+                _Body?.RemoveData(GetDataKey());
+                value?.SetData(GetDataKey(), this);
                 
                 _Body = value;
             }
@@ -41,5 +44,5 @@ public partial class OverlapReceiver : Node
     
     public virtual void MonitorOverlapped(Variant data) {}
     
-    public virtual bool IsDisabled() => Disabled;
+    public virtual bool IsDisabled() => Disabled || !CanProcess();
 }

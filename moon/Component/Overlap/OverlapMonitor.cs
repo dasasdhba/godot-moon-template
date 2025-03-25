@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-namespace Game;
+namespace Component;
 
 [GlobalClass]
 public partial class OverlapMonitor : OverlapStaticMonitor
@@ -33,26 +33,29 @@ public partial class OverlapMonitor : OverlapStaticMonitor
     
     protected virtual void OnOverlapped() { }
     protected virtual Func<OverlapReceiver, bool> GetReceiverFilter() => null;
+    protected virtual string GetReceiverKey() => "";
     protected virtual Variant GetReceiverData() => this;
-    
+    protected virtual Func<OverlapReceiver, bool> GetFilter() => null;
+
     private List<OverlapReceiver> LastReceivers = [];
     
     public override bool IsOverlapping(Vector2 offset)
     {
         var overlapFlag = false;
         var filter = GetFilter();
+        var rKey = GetReceiverKey();
         var rFilter = GetReceiverFilter();
         var data = GetReceiverData();
         
         List<OverlapReceiver> receivers = [];
 
         foreach (var result in Overlap.GetOverlappingObjects(
-                     r => OverlapReceiver.HasRef(r.Collider)
-                         && (filter == null || filter(r)),
+                     r => OverlapReceiver.HasRef(r.Collider, rKey)
+                         && (filter == null || filter(OverlapReceiver.GetRef(r.Collider, rKey))),
                      offset, true
                  ))
         {
-            var r = OverlapReceiver.GetRef(result.Collider);
+            var r = OverlapReceiver.GetRef(result.Collider, rKey);
             if (r.IsDisabled() || !(rFilter == null || rFilter(r))) continue;
 
             if (ReportSelf && !overlapFlag)

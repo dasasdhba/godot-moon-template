@@ -2,7 +2,7 @@ using System;
 using Godot;
 using Utils;
 
-namespace Game;
+namespace Component;
 
 /// <summary>
 /// This is used to monitor overlapping with some static object
@@ -48,12 +48,12 @@ public partial class OverlapStaticMonitor : Node
         };
     }
     
-    protected virtual Func<OverlapResult2D<GodotObject>, bool> GetFilter() => null;
+    protected virtual Func<OverlapResult2D<GodotObject>, bool> GetStaticFilter() => null;
 
     public virtual bool IsOverlapping(Vector2 offset)
     {
         return Overlap.IsOverlapping(
-            GetFilter(),
+            GetStaticFilter(),
             offset,
             true);
     }
