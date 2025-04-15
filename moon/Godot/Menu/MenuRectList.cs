@@ -23,7 +23,8 @@ public partial class MenuRectList : Control
     
     public enum MenuRectListProcessCallback { Idle, Physics }
     [Export]
-    public MenuRectListProcessCallback ProcessCallback { get ;set; } = MenuRectListProcessCallback.Idle;
+    public MenuRectListProcessCallback ProcessCallback { get ;set; } 
+        = MenuRectListProcessCallback.Physics;
 
     public MenuRectList() : base()
     {
@@ -33,7 +34,7 @@ public partial class MenuRectList : Control
     }
 
     private IEnumerable<MenuRect> GetMenuRects()
-        => this.GetChildren<MenuRect>().Where(child => child.Visible);
+        => this.GetChildrenCached<MenuRect>().Where(child => child.Visible);
         
     public void Sort(float delta = -1f)
     {

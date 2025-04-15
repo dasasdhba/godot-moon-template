@@ -22,7 +22,7 @@ public partial class Rotator : Node
     public enum RotatorProcessCallback { Idle, Physics }
     
     [Export]
-    public RotatorProcessCallback ProcessCallback { get; set; } = RotatorProcessCallback.Idle;
+    public RotatorProcessCallback ProcessCallback { get; set; } = RotatorProcessCallback.Physics;
 
     public Rotator() : base()
     {

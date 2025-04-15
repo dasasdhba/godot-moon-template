@@ -55,7 +55,7 @@ public partial class Draw2D : Node2D
     /// </summary>
     [Export]
     public Draw2DProcessCallback ProcessCallback { get; set; } =
-        Draw2DProcessCallback.Idle;
+        Draw2DProcessCallback.Physics;
 
     /// <summary>
     /// Run process only if visible.

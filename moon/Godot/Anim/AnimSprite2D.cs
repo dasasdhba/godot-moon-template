@@ -11,6 +11,7 @@ public partial class AnimSprite2D : AnimatedSprite2D
     {
         TreeEntered += () =>
         {
+            ProcessCallback = AnimatedSprite2DProcessCallback.Physics;
             if (AutoPlay) Play();  
         };
     }

@@ -13,6 +13,16 @@ namespace Utils;
 
 public static class MoonExtensions
 {
+    #region Collections
+
+    public static void AddNode<T>(this ICollection<T> arr, T node) where T : Node
+    {
+        node.TreeExited += () => arr.Remove(node);
+        arr.Add(node);
+    }
+
+    #endregion
+    
     #region DirAccess
 
     public static IEnumerable<string> GetFilePaths(this DirAccess dir, Func<string, bool> filter = null)
@@ -84,9 +94,9 @@ public static class MoonExtensions
 
     #region ConfigFile
 
-    public static Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
+    public static System.Collections.Generic.Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
     {
-        var result = new Dictionary<string, Variant>();
+        var result = new System.Collections.Generic.Dictionary<string, Variant>();
         foreach (var key in config.GetSectionKeys(section))
         {
             result[key] = config.GetValue(section, key);
@@ -94,7 +104,7 @@ public static class MoonExtensions
         return result;
     }
 
-    public static void SetSection(this ConfigFile config, string section, Dictionary<string, Variant> values)
+    public static void SetSection(this ConfigFile config, string section, System.Collections.Generic.Dictionary<string, Variant> values)
     {
         foreach (var key in values.Keys)
         {
@@ -145,7 +155,8 @@ public static class MoonExtensions
         parent.TreeExited += node.QueueFree;
     }
 
-    public static IEnumerable<T> GetChildren<T>(this Node node, bool includeInternal = false)
+    public static IEnumerable<T> GetChildren<T>(this Node node, 
+        bool includeInternal = false) where T : Node
     {
         foreach (var child in node.GetChildren(includeInternal))
         {
@@ -165,7 +176,8 @@ public static class MoonExtensions
         }
     }
     
-    public static IEnumerable<T> GetChildrenRecursively<T>(this Node node, bool includeInternal = false)
+    public static IEnumerable<T> GetChildrenRecursively<T>(this Node node, 
+        bool includeInternal = false) where T : Node
     {
         foreach (var child in node.GetChildrenRecursively(includeInternal))
         {
@@ -182,6 +194,71 @@ public static class MoonExtensions
         }
     }
     
+    private const string ChildrenCacheTag = "MCCache";
+    private const string ChildrenRecursivelyCacheTag = "MCRCache";
+    private static void ClearChildrenCache(this GodotObject node, string tag)
+    {
+        foreach (string meta in node.GetMetaList())
+        {
+            if (meta.StartsWith(tag))
+            {
+                node.RemoveMeta(meta);
+            }
+        }
+    }
+
+    private static void SetChildrenCacheMonitor(this Node node, Node target, string tag)
+    {
+        var signalTag = $"{tag}_MSignal";
+        if (target.HasData(signalTag))
+        {
+            var arr = target.GetData<Godot.Collections.Array<Node>>(signalTag);
+            if (arr.Contains(node)) return;
+            arr.Add(node);
+        }
+        else
+        {
+            target.SetData(signalTag, 
+            new Godot.Collections.Array<Node> { node });
+        }
+        
+        target.ChildEnteredTree += c => ClearChildrenCache(node, tag);
+        target.ChildExitingTree += c => ClearChildrenCache(node, tag);
+    }
+
+    public static IEnumerable<T> GetChildrenCached<[MustBeVariant] T>(this Node node, 
+        string tag = "Default", bool includeInternal = false) where T : Node
+    {
+        if (node.HasData($"{ChildrenCacheTag}{tag}"))
+        {
+            return node.GetData<Godot.Collections.Array<T>>($"{ChildrenCacheTag}{tag}");
+        }
+        
+        Godot.Collections.Array<T> result = new(node.GetChildren<T>(includeInternal));
+        node.SetData($"{ChildrenCacheTag}{tag}", result);
+        node.SetChildrenCacheMonitor(node, ChildrenCacheTag);
+        return result;
+    }
+
+    public static IEnumerable<T> GetChildrenRecursivelyCached<[MustBeVariant] T>(this Node node,
+        string tag = "Default", bool includeInternal = false) where T : Node
+    {
+        if (node.HasData($"{ChildrenRecursivelyCacheTag}{tag}"))
+        {
+            return node.GetData<Godot.Collections.Array<T>>($"{ChildrenRecursivelyCacheTag}{tag}");
+        }
+        
+        Godot.Collections.Array<T> result = [];
+        foreach (var child in node.GetChildrenRecursively(includeInternal))
+        {
+            if (child is T t) result.Add(t);
+            node.SetChildrenCacheMonitor(child, ChildrenRecursivelyCacheTag);
+        }
+        node.SetData($"{ChildrenRecursivelyCacheTag}{tag}", result);
+        node.SetChildrenCacheMonitor(node, ChildrenRecursivelyCacheTag);
+        return result;
+    }
+
     /// <summary>
     /// if node is in pool, remove it from parent instead.
     /// </summary>

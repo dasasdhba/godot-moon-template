@@ -11,7 +11,8 @@ public partial class MenuScrollContainer : Control
     
     [ExportCategory("MenuScrollContainer")]
     [Export]
-    public MenuScrollContainerProcessCallback ProcessCallback { get ;set; } = MenuScrollContainerProcessCallback.Idle;
+    public MenuScrollContainerProcessCallback ProcessCallback { get ;set; } 
+        = MenuScrollContainerProcessCallback.Physics;
     
     [ExportGroup("Horizontal")]
     [Export]
@@ -68,7 +69,7 @@ public partial class MenuScrollContainer : Control
     public double ScrollVerticalRate { get ;set; } = 20d;
     
     private IEnumerable<MenuRect> GetMenuRects()
-        => this.GetChildrenRecursively<MenuRect>();
+        => this.GetChildrenRecursivelyCached<MenuRect>();
     
     public MenuScrollContainer() : base()
     {

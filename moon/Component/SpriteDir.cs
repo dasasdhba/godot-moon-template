@@ -1,4 +1,3 @@
-using Global;
 using Godot;
 using Utils;
 
@@ -33,7 +32,7 @@ public partial class SpriteDir : Node, IFlipInit
     public override void _EnterTree()
     {
         if (Sprite == null && GetParent() is CanvasItem parent) Sprite = parent;
-        if (Root != null) Recorder = Root.GetRecorder();
+        if (Root != null && Root is not IPlatformer2D) Recorder = Root.GetRecorder();
     }
 
     public void FlipInit()
@@ -44,13 +43,23 @@ public partial class SpriteDir : Node, IFlipInit
             (uint)ConnectFlags.OneShot
         );
     }
+    
+    private const float Eps = 1e-1f;
 
     public override void _PhysicsProcess(double delta)
     {
         if (Root != null)
         {
-            var s = Recorder.GetLastMotion().X;
-            if (s != 0f) SetSpriteFlip(s < 0f);
+            if (Recorder != null)
+            {
+                var s = Recorder.GetLastMotion().X;
+                if (Mathf.Abs(s) > Eps) SetSpriteFlip(s < 0f);
+            }
+            else
+            {
+                var s = ((IPlatformer2D)Root).GetLastMoveSpeed();
+                if (Mathf.Abs(s) > Eps) SetSpriteFlip(s < 0f);
+            }
         }
     }
 

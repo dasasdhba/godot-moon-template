@@ -39,7 +39,7 @@ public abstract class SceneTrans
 
     public SceneTrans SetWaitTime(double time)
     {
-        InWaitTime = time - OutWaitTime;
+        InWaitTime = OutWaitTime > 0d ? time - OutWaitTime : time;
         return this;
     }
 
