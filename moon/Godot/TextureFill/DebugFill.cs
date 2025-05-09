@@ -1,7 +1,11 @@
 namespace Godot;
 
 [GlobalClass, Tool]
+#if TOOLS
+public partial class DebugFill : NodeSize2D, ISerializationListener
+#else
 public partial class DebugFill : NodeSize2D
+#endif
 {
 #if TOOLS
     [ExportCategory("DebugFill")]
@@ -31,6 +35,17 @@ public partial class DebugFill : NodeSize2D
         
         TreeEntered += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
+    }
+
+    public void OnBeforeSerialize()
+    {
+        TreeEntered -= QueueRedraw;
+        SignalSizeChanged -= QueueRedraw;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        QueueRedraw();
     }
 
 #endif

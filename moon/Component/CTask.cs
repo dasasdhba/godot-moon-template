@@ -26,6 +26,14 @@ public class CTask
         Cts.Cancel();
         OnCancel?.Invoke();
     }
+
+    public async GDTask CancelAsync()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelAsync();
+        OnCancel?.Invoke();
+    }
     
     public GDTaskStatus Status => Task.Status;
     public GDTask.Awaiter GetAwaiter() => Task.GetAwaiter();
@@ -51,6 +59,14 @@ public class CTask<T>
         if (Task.Status.IsCompleted()) return;
         
         Cts.Cancel();
+        OnCancel?.Invoke();
+    }
+    
+    public async GDTask CancelAsync()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelAsync();
         OnCancel?.Invoke();
     }
     

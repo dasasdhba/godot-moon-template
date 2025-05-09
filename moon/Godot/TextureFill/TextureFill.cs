@@ -1,7 +1,11 @@
 namespace Godot;
 
 [GlobalClass, Tool]
+#if TOOLS
+public partial class TextureFill : NodeSize2D, ISerializationListener
+#else
 public partial class TextureFill : NodeSize2D
+#endif
 {
     [ExportCategory("TextureFill")]
     [Export]
@@ -56,4 +60,19 @@ public partial class TextureFill : NodeSize2D
         TreeEntered += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
     }
+    
+#if TOOLS
+
+    public void OnBeforeSerialize()
+    {
+        TreeEntered -= QueueRedraw;
+        SignalSizeChanged -= QueueRedraw;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        QueueRedraw();
+    }
+
+#endif
 }

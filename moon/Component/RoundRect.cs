@@ -5,7 +5,11 @@ using Godot;
 namespace Component;
 
 [GlobalClass, Tool]
+#if TOOLS
+public partial class RoundRect : NodeSize2D, ISerializationListener
+#else
 public partial class RoundRect : NodeSize2D
+#endif
 {
     [ExportCategory("RoundRect")]
     [Export]
@@ -51,6 +55,21 @@ public partial class RoundRect : NodeSize2D
         Ready += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
     }
+    
+#if TOOLS
+    
+    public void OnBeforeSerialize()
+    {
+        Ready -= QueueRedraw;
+        SignalSizeChanged -= QueueRedraw;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        QueueRedraw();
+    }
+    
+#endif
 
     private IEnumerable<Vector2> GetRoundedPoints(Vector2 origin, Vector2 radius, float from, float to)
     {

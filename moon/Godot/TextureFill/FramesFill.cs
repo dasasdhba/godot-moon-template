@@ -10,7 +10,11 @@ namespace Godot;
 // we have to draw separately
 
 [GlobalClass, Tool]
+#if TOOLS
+public partial class FramesFill : NodeSize2D, ISerializationListener
+#else
 public partial class FramesFill : NodeSize2D
+#endif
 {
     [ExportCategory("FramesFill")]
     [Export]
@@ -173,7 +177,7 @@ public partial class FramesFill : NodeSize2D
         this.DrawTextureRectTiled(texture, new(Vector2.Zero, size));
     }
 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         Animate(delta);
     }
@@ -206,5 +210,17 @@ public partial class FramesFill : NodeSize2D
             }
         }
     }
+    
+    public void OnBeforeSerialize()
+    {
+        TreeEntered -= QueueRedraw;
+        SignalSizeChanged -= QueueRedraw;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        QueueRedraw();
+    }
+
 #endif   
 }

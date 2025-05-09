@@ -10,7 +10,7 @@ namespace Editor.Addon;
 /// Aseprite Importer main plugin.
 /// </summary>
 [Tool]
-public partial class AsepriteImporter : EditorPlugin
+public partial class AsepriteImporter : EditorPlugin, ISerializationListener
 {
     private AsepriteConfig Config;
     private AsepriteImporterPlugin Importer;
@@ -29,19 +29,28 @@ public partial class AsepriteImporter : EditorPlugin
         Command = new(Config);
         ResourceFilesystem = EditorInterface.Singleton.GetResourceFilesystem();
         
-        ResourceFilesystem.ResourcesReimported += f =>
-        {
-            if (ReimportFiles.Count > 0)
-            {
-                ReimportScheduled = true;
-                ReimportTimer = ReimportDelayTime;
-            }
+        ResourceFilesystem.ResourcesReimported += OnResourcesReimported;
+    }
 
-            if (ScanTimer > 0d)
-            {
-                ScanScheduled = true;
-            }
-        };
+    public void OnBeforeSerialize()
+    {
+        ResourceFilesystem.ResourcesReimported -= OnResourcesReimported;
+    }
+
+    public void OnAfterDeserialize() {}
+
+    private void OnResourcesReimported(string[] f)
+    {
+        if (ReimportFiles.Count > 0)
+        {
+            ReimportScheduled = true;
+            ReimportTimer = ReimportDelayTime;
+        }
+
+        if (ScanTimer > 0d)
+        {
+            ScanScheduled = true;
+        }
     }
 
     public override void _EnterTree()

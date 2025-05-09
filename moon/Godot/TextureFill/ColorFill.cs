@@ -1,7 +1,11 @@
 namespace Godot;
 
 [GlobalClass, Tool]
+#if TOOLS
+public partial class ColorFill : NodeSize2D, ISerializationListener
+#else
 public partial class ColorFill : NodeSize2D
+#endif
 {
     [ExportCategory("ColorFill")]
     [Export]
@@ -27,4 +31,19 @@ public partial class ColorFill : NodeSize2D
         TreeEntered += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
     }
+    
+#if TOOLS
+    
+    public void OnBeforeSerialize()
+    {
+        TreeEntered -= QueueRedraw;
+        SignalSizeChanged -= QueueRedraw;
+    }
+
+    public void OnAfterDeserialize()
+    {
+        QueueRedraw();
+    }
+
+#endif
 }

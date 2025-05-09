@@ -193,6 +193,18 @@ public class AsyncLoader<T> where T : Node
     {
         Loader = new(root, scenePath, maxCount, bufferCount);
     }
+
+    public T Create()
+    {
+        var result = Loader.Create();
+    #if TOOLS
+        if (result is not T)
+        {
+            GD.PushError($"AsyncLoader<{typeof(T)}> created a node of type {result.GetType()}, which is not desired.");
+            return null;
+        }
+    #endif
     
-    public T Create() => (T)Loader.Create();
+        return (T)result;
+    }
 }

@@ -69,6 +69,7 @@ public partial class ShadowCaster2D : Node
         private double Time;
         private int ZIndex;
         private bool DuplicateMaterial;
+        private bool ForceVisible;
         
         private CanvasItem SyncItem;
         private Texture2D Texture;
@@ -86,6 +87,7 @@ public partial class ShadowCaster2D : Node
             Time = caster.ShadowTime;
             ZIndex = caster.ZIndex;
             DuplicateMaterial = caster.DuplicateMaterial;
+            ForceVisible = caster.ForceVisible;
             
             SyncItem = syncItem;
         
@@ -95,6 +97,8 @@ public partial class ShadowCaster2D : Node
 
         public bool Init(int index)
         {
+            if (!ForceVisible && !SyncItem.IsVisibleInTree()) return false;
+            
             Texture2D texture = null;
             bool centered = false;
             bool flipH = false;
@@ -150,7 +154,7 @@ public partial class ShadowCaster2D : Node
             RenderingServer.CanvasItemSetZIndex(Id, SyncItem.ZIndex + ZIndex);
             RenderingServer.CanvasItemSetModulate(Id, SyncItem.Modulate);
             RenderingServer.CanvasItemSetSelfModulate(Id, SyncItem.SelfModulate);
-            RenderingServer.CanvasItemSetMaterial(Id, material.GetRid());
+            RenderingServer.CanvasItemSetMaterial(Id, material?.GetRid() ?? new Rid());
             RenderingServer.CanvasItemSetVisible(Id, true);
             
             Timer = 0d;
