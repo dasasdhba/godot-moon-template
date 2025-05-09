@@ -1,6 +1,7 @@
 ﻿using System;
 using Godot;
 using System.Collections.Generic;
+using Utils;
 
 namespace Global;
 
@@ -145,9 +146,10 @@ public partial class MusicSingleton : Node
         public override void _EnterTree()
         {
             CurrentVolume = Volume;
+            this.AddPhysicsProcess(Process);
         }
 
-        public override void _Process(double delta)
+        private void Process(double delta)
         {
             if (FadeDir != 0)
             {

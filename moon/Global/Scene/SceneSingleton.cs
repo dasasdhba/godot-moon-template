@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Component;
 using Godot;
 using Godot.Collections;
@@ -101,7 +100,7 @@ public partial class SceneSingleton : CanvasLayer
                 result = pack.InstantiateSafely();
             }, ct);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
             result?.QueueFree();
             result = null;

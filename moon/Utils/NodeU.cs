@@ -8,48 +8,75 @@ namespace Utils;
 /// </summary>
 public static partial class NodeU
 {
-    public partial class DelegateNode : Node
+    private partial class DelegateNode : Node
     {
         public Action<double> ProcessAction { get ;set; }
-        public Func<bool> IsPhysics { get; set; }
 
         protected void DelegateProcess(double delta)
         {
             ProcessAction?.Invoke(delta);
         }
+    }
 
-        public override void _PhysicsProcess(double delta)
-        {
-            if (IsPhysics != null && IsPhysics.Invoke())
-                DelegateProcess(delta);
-        }
+    private partial class DelegateDynamicNode : DelegateNode
+    {
+        public Func<bool> IsPhysics { get; set; }
 
-        public override void _Process(double delta)
+        public override void _Notification(int what)
         {
-            if (IsPhysics == null || !IsPhysics.Invoke())
-                DelegateProcess(delta);
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetProcessInternal(true);
+                    SetPhysicsProcessInternal(true);
+                    break;
+                case NotificationInternalProcess:
+                    if (IsPhysics == null || !IsPhysics.Invoke())
+                        DelegateProcess(GetProcessDeltaTime());
+                    break;
+                case NotificationInternalPhysicsProcess:
+                    if (IsPhysics != null && IsPhysics.Invoke())
+                        DelegateProcess(GetPhysicsProcessDeltaTime());
+                    break;
+            }
         }
     }
     
-    public partial class DelegateIdleNode : DelegateNode
+    private partial class DelegateIdleNode : DelegateNode
     {
-        public override void _Process(double delta)
+        public override void _Notification(int what)
         {
-            DelegateProcess(delta);
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetProcessInternal(true);
+                    break;
+                case NotificationInternalProcess:
+                    DelegateProcess(GetProcessDeltaTime());
+                    break;
+            }
         }
     }
     
-    public partial class DelegatePhysicsNode : DelegateNode
+    private partial class DelegatePhysicsNode : DelegateNode
     {
-        public override void _PhysicsProcess(double delta)
+        public override void _Notification(int what)
         {
-            DelegateProcess(delta);
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetPhysicsProcessInternal(true);
+                    break;
+                case NotificationInternalPhysicsProcess:
+                    DelegateProcess(GetPhysicsProcessDeltaTime());
+                    break;
+            }
         }
     }
     
-    public static DelegateNode AddProcess(this Node root, Action<double> process, Func<bool> isPhysics)
+    public static Node AddProcess(this Node root, Action<double> process, Func<bool> isPhysics)
     {
-        var uNode = new DelegateNode()
+        var uNode = new DelegateDynamicNode()
         {
             ProcessAction = process,
             IsPhysics = isPhysics
@@ -61,16 +88,10 @@ public static partial class NodeU
         return uNode;
     }
 
-    public static DelegateNode AddProcess(this Node root, Action<double> process, bool physics = false)
+    public static Node AddProcess(this Node root, Action<double> process, bool physics = false)
     {
         DelegateNode uNode = physics ? new DelegatePhysicsNode() : new DelegateIdleNode();
         uNode.ProcessAction = process;
-        
-        uNode.Ready += () =>
-        {
-            if (physics) uNode.SetProcess(false);
-            else uNode.SetPhysicsProcess(false);
-        };
         
         uNode.BindParent(root);
         root.AddChild(uNode, false, Node.InternalMode.Front);
@@ -78,16 +99,101 @@ public static partial class NodeU
         return uNode;
     }
         
-    public static DelegateNode AddPhysicsProcess(this Node root, Action<double> process)
+    public static Node AddPhysicsProcess(this Node root, Action<double> process)
         => AddProcess(root, process, true);
+    
+    private partial class DelegateRawNode : Node
+    {
+        public Action ProcessAction { get ;set; }
+
+        protected void DelegateProcess()
+        {
+            ProcessAction?.Invoke();
+        }
+    }
+
+    private partial class DelegateDynamicRawNode : DelegateRawNode
+    {
+        public Func<bool> IsPhysics { get; set; }
+
+        public override void _Notification(int what)
+        {
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetProcessInternal(true);
+                    SetPhysicsProcessInternal(true);
+                    break;
+                case NotificationInternalProcess:
+                    if (IsPhysics == null || !IsPhysics.Invoke())
+                        DelegateProcess();
+                    break;
+                case NotificationInternalPhysicsProcess:
+                    if (IsPhysics != null && IsPhysics.Invoke())
+                        DelegateProcess();
+                    break;
+            }
+        }
+    }
+    
+    private partial class DelegateIdleRawNode : DelegateRawNode
+    {
+        public override void _Notification(int what)
+        {
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetProcessInternal(true);
+                    break;
+                case NotificationInternalProcess:
+                    DelegateProcess();
+                    break;
+            }
+        }
+    }
+    
+    private partial class DelegatePhysicsRawNode : DelegateRawNode
+    {
+        public override void _Notification(int what)
+        {
+            switch ((ulong)what)
+            {
+                case NotificationReady:
+                    SetPhysicsProcessInternal(true);
+                    break;
+                case NotificationInternalPhysicsProcess:
+                    DelegateProcess();
+                    break;
+            }
+        }
+    }
+    
+    public static Node AddProcess(this Node root, Action process, Func<bool> isPhysics)
+    {
+        var uNode = new DelegateDynamicRawNode()
+        {
+            ProcessAction = process,
+            IsPhysics = isPhysics
+        };
         
-    public static DelegateNode AddProcess(this Node root, Action process, Func<bool> isPhysics)
-        => AddProcess(root, (double delta) => process(), isPhysics);
+        uNode.BindParent(root);
+        root.AddChild(uNode, false, Node.InternalMode.Front);
 
-    public static DelegateNode AddProcess(this Node root, Action process, bool physics = false)
-        => AddProcess(root, (double delta) => process(), physics);
+        return uNode;
+    }
 
-    public static DelegateNode AddPhysicsProcess(this Node root, Action process)
+    public static Node AddProcess(this Node root, Action process, bool physics = false)
+    {
+        DelegateRawNode uNode = physics ? new DelegatePhysicsRawNode() : new DelegateIdleRawNode();
+        uNode.ProcessAction = process;
+        
+        uNode.BindParent(root);
+        root.AddChild(uNode, false, Node.InternalMode.Front);
+        
+        return uNode;
+    }
+        
+    public static Node AddPhysicsProcess(this Node root, Action process)
         => AddProcess(root, process, true);
 
     // Action

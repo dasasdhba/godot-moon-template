@@ -81,6 +81,12 @@ public partial class FramesFill : NodeSize2D
     {
         TreeEntered += QueueRedraw;
         SignalSizeChanged += QueueRedraw;
+        
+    #if TOOLS
+        if (Engine.IsEditorHint()) return;
+    #endif    
+        
+        TreeEntered += () => this.AddPhysicsProcess(Animate);
     }
     
     private int Frame;
@@ -177,12 +183,13 @@ public partial class FramesFill : NodeSize2D
         this.DrawTextureRectTiled(texture, new(Vector2.Zero, size));
     }
 
+#if TOOLS
     public override void _PhysicsProcess(double delta)
     {
+        if (!Engine.IsEditorHint()) return;
         Animate(delta);
     }
 
-#if TOOLS    
     public override void _ValidateProperty(Dictionary property)
     {
         base._ValidateProperty(property);
@@ -221,6 +228,6 @@ public partial class FramesFill : NodeSize2D
     {
         QueueRedraw();
     }
-
+    
 #endif   
 }

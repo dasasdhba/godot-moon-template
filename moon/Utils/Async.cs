@@ -38,7 +38,7 @@ public static partial class Async
     }
     
     public static GDTask Wait(Node node, double time, CancellationToken ct, bool physics = false)
-        => WaitProcess(node, time, null, ct, physics);
+        => WaitProcess(node, time, () => {}, ct, physics);
 
     public static GDTask WaitPhysics(Node node, double time)
         => Wait(node, time, true);
@@ -52,10 +52,17 @@ public static partial class Async
 
         public override void _EnterTree()
         {
-            this.AddProcess((delta) =>
-            { 
-                Process.Invoke(delta);
-            }, ProcessCallback == UTimerProcessCallback.Physics);
+            this.AddProcess(Process, ProcessCallback == UTimerProcessCallback.Physics);
+        }
+    }
+    
+    public partial class AsyncRawProcessTimer : UTimer
+    {
+        public Action Process { get; set; }
+
+        public override void _EnterTree()
+        {
+            this.AddProcess(Process, ProcessCallback == UTimerProcessCallback.Physics);
         }
     }
 
@@ -122,6 +129,69 @@ public static partial class Async
     public static GDTask WaitPhysicsProcess(Node node, double time, Action<double> process, CancellationToken ct)
         => WaitProcess(node, time, process, ct, true);
         
+    private static AsyncRawProcessTimer CreateWaitRawProcessTimer(Node node, double time, Action process,
+        bool physics = false)
+    {
+        AsyncRawProcessTimer timer = new()
+        {
+            Autostart = true,
+            WaitTime = time,
+            ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle,
+            Process = process
+        };
+
+        timer.BindParent(node);
+        timer.SignalTimeout += timer.QueueFree;
+        node.AddChild(timer, false, Node.InternalMode.Front);
+        return timer;
+    }
+    
+    private static AsyncRawProcessTimer CreateWaitRawProcessTimer(Node node, double time, Action process,
+        CancellationToken ct, bool physics = false)
+    {
+        AsyncRawProcessTimer timer = new()
+        {
+            Autostart = true,
+            WaitTime = time,
+            ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle,
+        };
+        timer.Process = () =>
+        {
+            if (ct.IsCancellationRequested)
+            {
+                timer.TimeLeft = 0d;
+                return;
+            }
+            
+            process?.Invoke();
+        };
+
+        timer.BindParent(node);
+        timer.SignalTimeout += timer.QueueFree;
+        node.AddChild(timer, false, Node.InternalMode.Front);
+        return timer;
+    }
+
+    public static async GDTask WaitProcess(Node node, double time, Action process, bool physics = false)
+    {
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var timer = CreateWaitRawProcessTimer(node, time, process, physics);
+        await GDTask.ToSignal(timer, UTimer.SignalName.Timeout);
+    }
+    
+    public static async GDTask WaitProcess(Node node, double time, Action process, CancellationToken ct, bool physics = false)
+    {
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var timer = CreateWaitRawProcessTimer(node, time, process, ct, physics);
+        await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);
+    }
+
+    public static GDTask WaitPhysicsProcess(Node node, double time, Action process)
+        => WaitProcess(node, time, process, true);
+        
+    public static GDTask WaitPhysicsProcess(Node node, double time, Action process, CancellationToken ct)
+        => WaitProcess(node, time, process, ct, true);
+        
     // equivalent to GDTask.WaitUntil
 
     public partial class AsyncDelegateNode : Node
@@ -174,18 +244,6 @@ public static partial class Async
         node.AddChild(delegateNode, false, Node.InternalMode.Front); 
         return delegateNode;
     }
-    
-    public static GDTask WaitUntil(Node node, Func<bool> action, bool physics = false)
-        => WaitUntil(node, (delta) => action.Invoke(), physics);
-        
-    public static GDTask WaitUntil(Node node, Func<bool> action, CancellationToken ct, bool physics = false)
-        => WaitUntil(node, (delta) => action.Invoke(), ct, physics);
-
-    public static GDTask WaitUntilPhysics(Node node, Func<bool> action)
-        => WaitUntil(node, action, true);
-        
-    public static GDTask WaitUntilPhysics(Node node, Func<bool> action, CancellationToken ct)
-        => WaitUntil(node, action, ct, true);
 
     public static async GDTask WaitUntil(Node node, Func<double, bool> action, bool physics = false)
     {
@@ -205,6 +263,77 @@ public static partial class Async
         => WaitUntil(node, action, true);
         
     public static GDTask WaitUntilPhysics(Node node, Func<double, bool> action, CancellationToken ct)
+        => WaitUntil(node, action, ct, true);
+        
+    public partial class AsyncDelegateRawNode : Node
+    {
+        public Func<bool> Action { get; set; }
+        public bool IsPhysics { get; set; } = false;
+
+        [Signal]
+        public delegate void FinishedEventHandler();
+
+        public void Act()
+        {
+            if (Action.Invoke())
+            {
+                EmitSignal(SignalName.Finished);
+                QueueFree();
+            }
+        }
+
+        public override void _EnterTree()
+        {
+            this.AddProcess(Act, IsPhysics);
+        }
+    }
+
+    private static AsyncDelegateRawNode CreateDelegateRawNode(Node node, Func<bool> action, bool physics = false)
+    {
+        AsyncDelegateRawNode delegateNode = new()
+        {
+            Action = action,
+            IsPhysics = physics
+        };
+        
+        delegateNode.BindParent(node);
+        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        return delegateNode;
+    }
+    
+    private static AsyncDelegateRawNode CreateDelegateRawNode(Node node, Func<bool> action,
+        CancellationToken ct, bool physics = false)
+    {
+        AsyncDelegateRawNode delegateNode = new()
+        {
+            IsPhysics = physics
+        };
+        delegateNode.Action = () 
+            => ct.IsCancellationRequested || action.Invoke();
+        
+        delegateNode.BindParent(node);
+        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        return delegateNode;
+    }
+
+    public static async GDTask WaitUntil(Node node, Func<bool> action, bool physics = false)
+    {
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var delegateNode = CreateDelegateRawNode(node, action, physics);
+        await GDTask.ToSignal(delegateNode, AsyncDelegateRawNode.SignalName.Finished);
+    }
+    
+    public static async GDTask WaitUntil(Node node, Func<bool> action, CancellationToken ct, bool physics = false)
+    {
+        if (!GodotObject.IsInstanceValid(node)) return;
+        var delegateNode = CreateDelegateRawNode(node, action, ct, physics);
+        await GDTask.ToSignal(delegateNode, AsyncDelegateRawNode.SignalName.Finished, ct);
+    }
+
+    public static GDTask WaitUntilPhysics(Node node, Func<bool> action)
+        => WaitUntil(node, action, true);
+        
+    public static GDTask WaitUntilPhysics(Node node, Func<bool> action, CancellationToken ct)
         => WaitUntil(node, action, ct, true);
         
     // wait frames
@@ -325,6 +454,52 @@ public static partial class Async
     public static GDTask<T> WaitPhysicsProcess<T>(Node node, GDTask<T> task, Action<double> process, CancellationToken ct)
         => WaitProcess(node, task, process, ct, true);
         
+    public static GDTask WaitProcess(Node node, GDTask task, Action process, bool physics = false)
+        => WaitUntil(node, () =>
+        {
+            process.Invoke();
+            return task.Status.IsCompleted();
+        }, physics);
+        
+    public static GDTask WaitProcess(Node node, GDTask task, Action process, CancellationToken ct, bool physics = false)
+        => WaitUntil(node, () =>
+        {
+            process.Invoke();
+            return task.Status.IsCompleted();
+        }, ct, physics);
+        
+    public static async GDTask<T> WaitProcess<T>(Node node, GDTask<T> task, Action process, bool physics = false)
+    {
+        await WaitUntil(node, () =>
+        {
+            process.Invoke();
+            return task.Status.IsCompleted();
+        }, physics);
+        return task.GetAwaiter().GetResult();
+    }
+    
+    public static async GDTask<T> WaitProcess<T>(Node node, GDTask<T> task, Action process, CancellationToken ct, bool physics = false)
+    {
+        await WaitUntil(node, () =>
+        {
+            process.Invoke();
+            return task.Status.IsCompleted();
+        }, ct, physics);
+        return task.GetAwaiter().GetResult();
+    }
+
+    public static GDTask WaitPhysicsProcess(Node node, GDTask task, Action process)
+        => WaitProcess(node, task, process, true);
+        
+    public static GDTask WaitPhysicsProcess(Node node, GDTask task, Action process, CancellationToken ct)
+        => WaitProcess(node, task, process, ct, true);
+        
+    public static GDTask<T> WaitPhysicsProcess<T>(Node node, GDTask<T> task, Action process)
+        => WaitProcess(node, task, process, true);
+        
+    public static GDTask<T> WaitPhysicsProcess<T>(Node node, GDTask<T> task, Action process, CancellationToken ct)
+        => WaitProcess(node, task, process, ct, true);
+        
     // wait a signal bind with internal node
 
     public static GDTask<Variant[]> Wait(Node node, GodotObject obj, StringName signal, bool physics = false)
@@ -351,6 +526,18 @@ public static partial class Async
     public static GDTask<Variant[]> WaitPhysicsProcess(Node node, GodotObject obj, StringName signal, Action<double> process, CancellationToken ct)
         => WaitProcess(node, obj, signal, process, ct, true);
         
+    public static GDTask<Variant[]> WaitProcess(Node node, GodotObject obj, StringName signal, Action process, bool physics = false)
+        => WaitProcess(node, GDTask.ToSignal(obj, signal), process, physics);
+        
+    public static GDTask<Variant[]> WaitProcess(Node node, GodotObject obj, StringName signal, Action process, CancellationToken ct, bool physics = false)
+        => WaitProcess(node, GDTask.ToSignal(obj, signal, ct), process, ct, physics);
+    
+    public static GDTask<Variant[]> WaitPhysicsProcess(Node node, GodotObject obj, StringName signal, Action process)
+        => WaitProcess(node, obj, signal, process, true);
+        
+    public static GDTask<Variant[]> WaitPhysicsProcess(Node node, GodotObject obj, StringName signal, Action process, CancellationToken ct)
+        => WaitProcess(node, obj, signal, process, ct, true);
+        
     // wait a tween bind with internal node
 
     public partial class AsyncTweenNode : Node
@@ -362,7 +549,7 @@ public static partial class Async
         [Signal]
         public delegate void FinishedEventHandler();
 
-        public void Act(double delta)
+        private void Act(double delta)
         {
             Action?.Invoke(delta);
             if (!IsInstanceValid(Tween))
@@ -445,12 +632,24 @@ public static partial class Async
         
     public static GDTask WaitPhysicsProcess(Node node, Tween tween, Action<double> process, CancellationToken ct)
         => WaitProcess(node, tween, process, ct, true);
+        
+    public static GDTask WaitProcess(Node node, Tween tween, Action process, bool physics = false)
+        => WaitProcess(node, tween, delta => process.Invoke(), physics);
+    
+    public static GDTask WaitProcess(Node node, Tween tween, Action process, CancellationToken ct, bool physics = false)
+        => WaitProcess(node, tween, delta => process.Invoke(), ct, physics);
+
+    public static GDTask WaitPhysicsProcess(Node node, Tween tween, Action process)
+        => WaitProcess(node, tween, process, true);
+        
+    public static GDTask WaitPhysicsProcess(Node node, Tween tween, Action process, CancellationToken ct)
+        => WaitProcess(node, tween, process, ct, true);
 
     public static GDTask Wait(Node node, Tween tween, bool physics = false)
-        => WaitProcess(node, tween, null, physics);
+        => WaitProcess(node, tween, () => { }, physics);
         
     public static GDTask Wait(Node node, Tween tween, CancellationToken ct, bool physics = false)
-        => WaitProcess(node, tween, null, ct, physics);
+        => WaitProcess(node, tween, () => { }, ct, physics);
 
     public static GDTask WaitPhysics(Node node, Tween tween)
         => Wait(node, tween, true);

@@ -1,4 +1,5 @@
 using Godot.Collections;
+using Utils;
 
 namespace Godot;
 
@@ -9,30 +10,17 @@ public partial class ParallaxLayer2D : ParallaxLayer
     [Export]
     public Vector2 AutoScroll { get ;set; }
 
-    public override void _ValidateProperty(Dictionary property)
+    public ParallaxLayer2D() : base()
     {
-        // disable transform
-        if (
-            (string)property["name"] == "position" ||
-            (string)property["name"] == "rotation" ||
-            (string)property["name"] == "scale" ||
-            (string)property["name"] == "skew"
-        )
-        {
-            property["usage"] = (uint)PropertyUsageFlags.None;
-        }
+    #if TOOLS
+        if (Engine.IsEditorHint()) return;
+    #endif    
+    
+        TreeEntered += () => this.AddPhysicsProcess(Process);
     }
 
-    public override void _Process(double delta)
+    private void Process(double delta)
     {
-#if TOOLS    
-        if (Engine.IsEditorHint())
-        {
-            Transform = new(0f, Vector2.Zero);
-            return;
-        }
-#endif        
-        
         var offset = MotionOffset;
 
         if (MotionMirroring.X > 0f)
@@ -49,4 +37,28 @@ public partial class ParallaxLayer2D : ParallaxLayer
         
         MotionOffset = offset;
     }
+
+#if TOOLS
+    public override void _ValidateProperty(Dictionary property)
+    {
+        // disable transform
+        if (
+            (string)property["name"] == "position" ||
+            (string)property["name"] == "rotation" ||
+            (string)property["name"] == "scale" ||
+            (string)property["name"] == "skew"
+        )
+        {
+            property["usage"] = (uint)PropertyUsageFlags.None;
+        }
+    }
+
+    public override void _Process(double delta)
+    {
+        if (Engine.IsEditorHint())
+        {
+            Transform = new(0f, Vector2.Zero);
+        }
+    }
+#endif
 }
