@@ -674,16 +674,18 @@ public static partial class Async
     {
         if (!GodotObject.IsInstanceValid(node)) return;
         var timer = node.ActionRepeat(time, action, true, physics);
-        timer.AddProcess(() =>
+
+        try
         {
-            if (ct.IsCancellationRequested) timer.QueueFree();
-        }, physics);
-        
-        for (int i = 0; i < count; i++)
-        {
-            await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);
+            for (int i = 0; i < count; i++)
+            {
+                await GDTask.ToSignal(timer, UTimer.SignalName.Timeout, ct);
+            }
         }
-        timer.QueueFree();
+        finally
+        {
+            timer.QueueFree();
+        }
     }
     
     public static GDTask RepeatPhysics(Node node, double time, int count, Action action)

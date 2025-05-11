@@ -3,8 +3,7 @@ using Utils;
 
 namespace Godot;
 
-[GlobalClass]
-public partial class FsmNode : Node
+public abstract partial class FsmNode : Node
 {
     public enum FsmNodeProcessCallback { Idle, Physics }
     
@@ -26,7 +25,7 @@ public partial class FsmNode : Node
     
     protected virtual void OnFsmStart() {}
     protected virtual void OnFsmStop() {}
-    protected virtual Func<double, string> GetFsmProcess() => delta => "";
+    protected abstract Func<double, string> GetFsmProcess();
 
     public void FsmStop()
     {

@@ -27,16 +27,36 @@ public static partial class NodeU
             switch ((ulong)what)
             {
                 case NotificationReady:
-                    SetProcessInternal(true);
-                    SetPhysicsProcessInternal(true);
+                    if (IsPhysics != null && IsPhysics.Invoke())
+                    {
+                        SetPhysicsProcessInternal(true);
+                    }
+                    else
+                    {
+                        SetProcessInternal(true);
+                    }
                     break;
                 case NotificationInternalProcess:
                     if (IsPhysics == null || !IsPhysics.Invoke())
+                    {
                         DelegateProcess(GetProcessDeltaTime());
+                    }
+                    else
+                    {
+                        SetProcessInternal(false);
+                        SetPhysicsProcessInternal(true);
+                    }
                     break;
                 case NotificationInternalPhysicsProcess:
                     if (IsPhysics != null && IsPhysics.Invoke())
+                    {
                         DelegateProcess(GetPhysicsProcessDeltaTime());
+                    }
+                    else
+                    {
+                        SetProcessInternal(true);
+                        SetPhysicsProcessInternal(false);
+                    }
                     break;
             }
         }
@@ -76,6 +96,14 @@ public static partial class NodeU
     
     public static Node AddProcess(this Node root, Action<double> process, Func<bool> isPhysics)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{root} namely {root.GetPathTo(root.GetTree().GetEditedSceneRoot())} is trying to call AddProcess in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         var uNode = new DelegateDynamicNode()
         {
             ProcessAction = process,
@@ -90,6 +118,14 @@ public static partial class NodeU
 
     public static Node AddProcess(this Node root, Action<double> process, bool physics = false)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{root} namely {root.GetPathTo(root.GetTree().GetEditedSceneRoot())} is trying to call AddProcess in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         DelegateNode uNode = physics ? new DelegatePhysicsNode() : new DelegateIdleNode();
         uNode.ProcessAction = process;
         
@@ -121,16 +157,36 @@ public static partial class NodeU
             switch ((ulong)what)
             {
                 case NotificationReady:
-                    SetProcessInternal(true);
-                    SetPhysicsProcessInternal(true);
+                    if (IsPhysics != null && IsPhysics.Invoke())
+                    {
+                        SetPhysicsProcessInternal(true);
+                    }
+                    else
+                    {
+                        SetProcessInternal(true);
+                    }
                     break;
                 case NotificationInternalProcess:
                     if (IsPhysics == null || !IsPhysics.Invoke())
+                    {
                         DelegateProcess();
+                    }
+                    else
+                    {
+                        SetProcessInternal(false);
+                        SetPhysicsProcessInternal(true);
+                    }
                     break;
                 case NotificationInternalPhysicsProcess:
                     if (IsPhysics != null && IsPhysics.Invoke())
+                    {
                         DelegateProcess();
+                    }
+                    else
+                    {
+                        SetProcessInternal(true);
+                        SetPhysicsProcessInternal(false);
+                    }
                     break;
             }
         }
@@ -170,6 +226,14 @@ public static partial class NodeU
     
     public static Node AddProcess(this Node root, Action process, Func<bool> isPhysics)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{root} namely {root.GetPathTo(root.GetTree().GetEditedSceneRoot())} is trying to call AddProcess in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         var uNode = new DelegateDynamicRawNode()
         {
             ProcessAction = process,
@@ -184,6 +248,14 @@ public static partial class NodeU
 
     public static Node AddProcess(this Node root, Action process, bool physics = false)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{root} namely {root.GetPathTo(root.GetTree().GetEditedSceneRoot())} is trying to call AddProcess in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         DelegateRawNode uNode = physics ? new DelegatePhysicsRawNode() : new DelegateIdleRawNode();
         uNode.ProcessAction = process;
         
@@ -200,6 +272,14 @@ public static partial class NodeU
 
     public static UTimer ActionDelay(this Node node, double delay, Action action, bool physics = false)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call ActionDelay in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         UTimer timer = new()
         {
             Autostart = true,
@@ -225,6 +305,14 @@ public static partial class NodeU
 
     public static UTimer ActionRepeat(this Node node, double interval, Action action, bool autostart = true, bool physics = false)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call ActionRepeat in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         UTimer timer = new()
         {
             Autostart = autostart,

@@ -94,9 +94,9 @@ public static class MoonExtensions
 
     #region ConfigFile
 
-    public static System.Collections.Generic.Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
+    public static Dictionary<string, Variant> GetSection(this ConfigFile config, string section)
     {
-        var result = new System.Collections.Generic.Dictionary<string, Variant>();
+        var result = new Dictionary<string, Variant>();
         foreach (var key in config.GetSectionKeys(section))
         {
             result[key] = config.GetValue(section, key);
@@ -104,7 +104,7 @@ public static class MoonExtensions
         return result;
     }
 
-    public static void SetSection(this ConfigFile config, string section, System.Collections.Generic.Dictionary<string, Variant> values)
+    public static void SetSection(this ConfigFile config, string section, Dictionary<string, Variant> values)
     {
         foreach (var key in values.Keys)
         {
@@ -194,8 +194,8 @@ public static class MoonExtensions
         }
     }
     
-    private const string ChildrenCacheTag = "MCCache";
-    private const string ChildrenRecursivelyCacheTag = "MCRCache";
+    private const string ChildrenCacheTag = "_MCCache";
+    private const string ChildrenRecursivelyCacheTag = "_MCRCache";
     private static void ClearChildrenCache(this GodotObject node, string tag)
     {
         foreach (string meta in node.GetMetaList())
@@ -229,6 +229,14 @@ public static class MoonExtensions
     public static IEnumerable<T> GetChildrenCached<[MustBeVariant] T>(this Node node, 
         string tag = "Default", bool includeInternal = false) where T : Node
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call GetChildrenCached in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         if (node.HasData($"{ChildrenCacheTag}{tag}"))
         {
             return node.GetData<Godot.Collections.Array<T>>($"{ChildrenCacheTag}{tag}");
@@ -243,6 +251,14 @@ public static class MoonExtensions
     public static IEnumerable<T> GetChildrenRecursivelyCached<[MustBeVariant] T>(this Node node,
         string tag = "Default", bool includeInternal = false) where T : Node
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call GetChildrenRecursivelyCached in editor, which is not expected.");
+            return null;
+        }
+    #endif
+    
         if (node.HasData($"{ChildrenRecursivelyCacheTag}{tag}"))
         {
             return node.GetData<Godot.Collections.Array<T>>($"{ChildrenRecursivelyCacheTag}{tag}");
@@ -264,6 +280,13 @@ public static class MoonExtensions
     /// </summary>
     public static void TryQueueFree(this Node node)
     {
+    #if TOOLS
+        if (Engine.IsEditorHint())
+        {
+            GD.PushWarning($"{node} namely {node.GetPathTo(node.GetTree().GetEditedSceneRoot())} is trying to call TryQueueFree in editor, which is not expected.");
+        }
+    #endif
+    
         if (NodePool.IsInPool(node))
         {
             node.GetParent().CallDeferred(Node.MethodName.RemoveChild, node);
