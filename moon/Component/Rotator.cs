@@ -19,6 +19,9 @@ public partial class Rotator : Node
     [Export]
     public bool Flip { get; set; } = false;
     
+    [Export]
+    public bool Disabled { get; set; } = false;
+    
     public enum RotatorProcessCallback { Idle, Physics }
     
     [Export]
@@ -35,7 +38,7 @@ public partial class Rotator : Node
 
     private void RotateProcess(double delta)
     {
-        if (RotateNode == null) return;
+        if (RotateNode == null || Disabled) return;
         
         var rotation = (float)RotateNode.Get(Node2D.PropertyName.Rotation);
         rotation += (float)Mathf.DegToRad(Speed * delta) * (Flip ? -1 : 1);

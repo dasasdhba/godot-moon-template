@@ -11,14 +11,14 @@ public partial class MenuAnim : Node
     
     public virtual async GDTask Appear(MenuRoot root, CancellationToken ct)
     {
-        await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+        await this.AwaitPhysicsFrame(MinWaitFrame, ct);
         root.Show();
     }
     
     public virtual async GDTask Disappear(MenuRoot root, CancellationToken ct)
     {
         root.Hide();
-        await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+        await this.AwaitPhysicsFrame(MinWaitFrame, ct);
     }
 
     public virtual void QuickShow(MenuRoot root)

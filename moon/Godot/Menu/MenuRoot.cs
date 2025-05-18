@@ -101,7 +101,7 @@ public partial class MenuRoot : Control
             if (quick)
             {
                 QuickShow();
-                await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+                await this.AwaitPhysicsFrame(MinWaitFrame, ct);
             }
             else await Appear(ct);
             Disabled = false;
@@ -120,7 +120,7 @@ public partial class MenuRoot : Control
             if (quick)
             {
                 QuickHide();
-                await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+                await this.AwaitPhysicsFrame(MinWaitFrame, ct);
             }
             else await Disappear(ct);
 
@@ -152,7 +152,7 @@ public partial class MenuRoot : Control
             return;
         }
     
-        await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+        await this.AwaitPhysicsFrame(MinWaitFrame, ct);
         Show();
     }
     
@@ -165,7 +165,7 @@ public partial class MenuRoot : Control
         }
         
         Hide();
-        await Async.WaitPhysicsFrame(this, MinWaitFrame, ct);
+        await this.AwaitPhysicsFrame(MinWaitFrame, ct);
     }
 
     private void QuickShow()

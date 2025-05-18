@@ -68,7 +68,7 @@ public partial class AnimGroup2D : Node2D
             }
         };
         
-        TreeEntered += () => this.AddProcess(UpdateSprites);
+        TreeEntered += () => this.AddPhysicsProcess(UpdateSprites);
         
         Ready += () =>
         {

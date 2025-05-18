@@ -1,6 +1,8 @@
 ﻿using Godot;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Utils;
 
@@ -14,6 +16,51 @@ public static partial class Mathe
         var dir = axis.Normalized();
         origin -= dir * dir.Dot(origin);
         return origin + axis;
+    }
+    
+    /// <summary>
+    /// Generate a quad crossing with (0,0), (center, maxHeight), (1, finalHeight)
+    /// </summary>
+    public static Func<float, float> UnitQuad(float maxHeight = 1f, 
+        float finalHeight = 0f, float center = 0.5f)
+    {
+        if (center is <= 0f or >= 1f) 
+            throw new ArgumentException("center should be between 0 and 1");
+        
+        ref var a = ref maxHeight;
+        ref var b = ref finalHeight;
+        ref var c = ref center;
+        
+        /* solve
+            c^2x + cy = a,
+            x + y = b
+        */
+            
+        var cm1c = (c - 1f) * c;
+        var bc = b * c;
+        
+        var x = (a - bc) / cm1c;
+        var y = (bc * c - a) / cm1c;
+        
+        return p => p * p * x + p * y;
+    }
+
+    public static int[] PartitionInt(int total, int count)
+    {
+        var r = total / count;
+        var b = total % count;
+        var result = new int[count];
+        Array.Fill(result, r);
+        var rs = result.AsSpan();
+        for (var i = 0; i < b; i++) rs[i]++;
+        return result;
+    }
+
+    public static int[] PartitionIntRandom(int total, int count)
+    {
+        var result = PartitionInt(total, count);
+        result.Shuffle();
+        return result;
     }
     
     /// <summary>
@@ -168,7 +215,7 @@ public static partial class Mathe
         => values.Min();
     
     // random
-    public static RandomNumberGenerator RNG { get ;set; } = new();
+    private static RandomNumberGenerator RNG = new();
 
     /// <summary>
     /// 0~1 (inclusive)
@@ -189,4 +236,17 @@ public static partial class Mathe
     /// min~max (inclusive)
     /// </summary>
     public static int RandiRange(int min, int max) => RNG.RandiRange(min, max);
+    
+    public static T SelectRandom<T>(this IList<T> arr)
+    {
+        var count = arr.Count;
+        if (count == 0) return default;
+        return arr[RandiRange(0, count - 1)];
+    }
+    
+    private static Random _Rand = new();
+    public static void Shuffle<T>(this T[] arr) => _Rand.Shuffle(arr);
+    public static void Shuffle<T>(this Span<T> arr) => _Rand.Shuffle(arr);
+    public static void Shuffle<T>(this List<T> list)
+        => CollectionsMarshal.AsSpan(list).Shuffle();
 }

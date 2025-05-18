@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Component;
 using Global;
@@ -17,8 +18,9 @@ public static class MoonExtensions
 
     public static void AddNode<T>(this ICollection<T> arr, T node) where T : Node
     {
+        node.TreeEntered += () => arr.Add(node);
         node.TreeExited += () => arr.Remove(node);
-        arr.Add(node);
+        if (node.IsInsideTree()) arr.Add(node);
     }
 
     #endregion
@@ -505,8 +507,8 @@ public static class MoonExtensions
             return result;
         }
         
-        await Async.WaitUntilPhysics(body, () => isOverlapping(), ct);
-        await Async.WaitUntilPhysics(body, () => !isOverlapping(), ct);
+        await body.AwaitUntilPhysics(() => isOverlapping(), ct);
+        await body.AwaitUntilPhysics(() => !isOverlapping(), ct);
         
         body.CollisionMask = origin;
     }
@@ -533,8 +535,8 @@ public static class MoonExtensions
             return result;
         }
         
-        await Async.WaitUntilPhysics(body, () => isOverlapping(), ct);
-        await Async.WaitUntilPhysics(body, () => !isOverlapping(), ct);
+        await body.AwaitUntilPhysics(() => isOverlapping(), ct);
+        await body.AwaitUntilPhysics(() => !isOverlapping(), ct);
         
         body.CollisionMask = origin;
     }

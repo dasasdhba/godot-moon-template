@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using GodotTask;
+using Utils;
 
 namespace Component;
 
@@ -32,6 +33,22 @@ public class CTask
         if (Task.Status.IsCompleted()) return;
         
         await Cts.CancelAsync();
+        OnCancel?.Invoke();
+    }
+
+    public async GDTask CancelSafely()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelSafely();
+        OnCancel?.Invoke();
+    }
+
+    public async GDTask CancelPhysics()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelPhysics();
         OnCancel?.Invoke();
     }
     
@@ -67,6 +84,22 @@ public class CTask<T>
         if (Task.Status.IsCompleted()) return;
         
         await Cts.CancelAsync();
+        OnCancel?.Invoke();
+    }
+    
+    public async GDTask CancelSafely()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelSafely();
+        OnCancel?.Invoke();
+    }
+
+    public async GDTask CancelPhysics()
+    {
+        if (Task.Status.IsCompleted()) return;
+        
+        await Cts.CancelPhysics();
         OnCancel?.Invoke();
     }
     
