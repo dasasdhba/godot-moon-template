@@ -48,12 +48,15 @@ public partial class OverlapStaticMonitor : Node
         };
     }
     
-    protected virtual Func<OverlapResult2D<GodotObject>, bool> GetStaticFilter() => null;
+    /// <summary>
+    /// The static filter when overlapping, return false to ignore the result permanently
+    /// </summary>
+    protected virtual bool GetStaticFilter(OverlapResult2D<GodotObject> r) => true;
 
     public virtual bool IsOverlapping(Vector2 offset)
     {
         return Overlap.IsOverlapping(
-            GetStaticFilter(),
+            GetStaticFilter,
             offset,
             true);
     }

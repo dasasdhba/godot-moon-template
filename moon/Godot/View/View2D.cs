@@ -20,7 +20,7 @@ public partial class View2D : Node2D
     public Rect2 Region
     {
         get => _Region;
-        set
+        private set
         {
             _Region = value;
             ChangingRegion = false;
@@ -84,6 +84,12 @@ public partial class View2D : Node2D
 
     [Export]
     public Vector2 FollowOffset { get ; set; } = Vector2.Zero;
+    
+    [Signal]
+    public delegate void RegionChangeStartedEventHandler();
+    
+    [Signal]
+    public delegate void RegionChangeFinishedEventHandler();
 
     private Vector2 CenterPosition { get ;set; }
     public Vector2 GetCenterPosition() => CenterPosition;
@@ -192,11 +198,15 @@ public partial class View2D : Node2D
 
     public void ChangeRegion(Rect2 region, double time, Func<double, double> interp)
     {
+        if (Region == region) return;
+        
         Region = region;
-
+        EmitSignalRegionChangeStarted();
+    
         if (time <= 0d)
         {
             if (time < 0d) ForceUpdate();
+            EmitSignalRegionChangeFinished();
             return;
         }
 
@@ -249,7 +259,11 @@ public partial class View2D : Node2D
             var p = (float)ChangingInterp.Invoke(t);
             CenterPosition = (1f - p) * ChangingOrigin + p * target;
             CurrentZoom = (1f - p) * ChangingZoom + p * zoom;
-            if (ChangingTimer >= ChangingTime) ChangingRegion = false;
+            if (ChangingTimer >= ChangingTime)
+            {
+                ChangingRegion = false;
+                EmitSignalRegionChangeFinished();
+            }
         }
         else
         {

@@ -243,6 +243,7 @@ public partial class SceneSingleton : CanvasLayer
         {
             current.Name = "@OldScene";
             current.QueueFree();
+            await this.AwaitPhysicsFrame();
         }
         
         var scene = await loadTask;

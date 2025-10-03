@@ -16,8 +16,6 @@ public partial class DrawProcess2D : Draw2D
 
     protected override bool DrawProcess(double delta)
     {
-        ClearQueuedDraw();
-    
         foreach (var task in QueuedTasks)
         {
             ClearDrawSettings();

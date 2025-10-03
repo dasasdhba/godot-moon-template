@@ -2,8 +2,8 @@ namespace Component;
 
 public abstract class StateProcess
 {
-    public virtual void OnStateStart() {}
-    public virtual void OnStateEnd() {}
+    public virtual void OnStateStart(StateProcess last) { }
+    public virtual void OnStateEnd(StateProcess next) { }
     
     /// <summary>
     /// Return this to keep state, null to stop state machine, others to change state.

@@ -25,7 +25,7 @@ public partial class GameEntry : Node
         var path = Editor.Addon.MoonDebug.DebugFilePath;
         if (OS.IsDebugBuild() && FileAccess.FileExists(path))
         {
-            var f = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+            using var f = FileAccess.Open(path, FileAccess.ModeFlags.Read);
             var r = f.GetLine();
             f.Close();
             if (FileAccess.FileExists(r))

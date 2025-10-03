@@ -43,7 +43,7 @@ public static class MoonExtensions
         foreach (var file in dir.GetFilePaths(filter)) yield return file;
         foreach (var sub in dir.GetDirectories())
         {
-            var subDir = DirAccess.Open(root + "/" + sub);
+            using var subDir = DirAccess.Open(root + "/" + sub);
             foreach (var file in subDir.GetFilePathsRecursively(filter)) yield return file;
         }
     }
@@ -118,6 +118,22 @@ public static class MoonExtensions
 
     #region Node
     
+    private static bool IsNodeOperationSafe(Node node)
+        => GodotObject.IsInstanceValid(node) && (!node.IsInsideTree() || node.IsNodeReady());
+
+    public static void AddChildSafely(this Node node, Node child, 
+        bool forceReadableName = false, Node.InternalMode internalMode = Node.InternalMode.Disabled)
+    {
+        if (IsNodeOperationSafe(node)) node.AddChild(child, forceReadableName, internalMode);
+        else node.CallDeferred(Node.MethodName.AddChild, child, forceReadableName, (int)internalMode);
+    }
+    
+    public static void AddSiblingSafely(this Node node, Node sibling, bool forceReadableName = false)
+    {
+        if (IsNodeOperationSafe(node.GetParent())) node.AddSibling(sibling, forceReadableName);
+        else node.CallDeferred(Node.MethodName.AddSibling, sibling, forceReadableName);
+    }
+    
     public static string GetUniquePath(this Node node)
         => Moon.Scene.MainViewport.GetPathTo(node);
 
@@ -143,7 +159,7 @@ public static class MoonExtensions
     /// <summary>
     /// Bind internal node with parent. This prevents duplicate issues.
     /// </summary>
-    public static void BindParent(this Node node, Node parent)
+    public static void BindParent(this Node node, Node parent, bool bindExit = true)
     {
         node.TreeEntered += () =>
         {
@@ -154,7 +170,7 @@ public static class MoonExtensions
         // this conflicts with object pooling
         // though the performance issue may not be very serious
         
-        parent.TreeExited += node.QueueFree;
+        if (bindExit) parent.TreeExited += node.QueueFree;
     }
 
     public static IEnumerable<T> GetChildren<T>(this Node node, 
@@ -432,6 +448,14 @@ public static class MoonExtensions
     {
         if (!item.HasData(RecorderTag)) item.AddRecorder();
         return item.GetData<MotionRecorder2D>(RecorderTag);
+    }
+
+    public static Texture2D TryGetTexture(this CanvasItem item)
+    {
+        if (item is Sprite2D spr) return spr.Texture;
+        if (item is AnimatedSprite2D anim) return anim.SpriteFrames.GetFrameTexture(
+            anim.Animation, anim.Frame);
+        return null;
     }
     
     #endregion

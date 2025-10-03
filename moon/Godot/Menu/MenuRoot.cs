@@ -12,21 +12,11 @@ namespace Godot;
 public partial class MenuRoot : Control
 {
     /// <summary>
-    /// Recommend to select an default rect to enter the menu
+    /// Recommend to select a default rect to enter the menu
     /// </summary>
     [ExportCategory("MenuRoot")]
     [Export]
-    public bool Disabled
-    {
-        get => _Disabled;
-        set
-        {
-            _Disabled = value;
-            Active = !value;
-        }
-    }
-    
-    private bool _Disabled = true;
+    public bool Disabled { get ;set; } = true;
     
     [ExportGroup("GuiBindings")]
     [Export]
@@ -82,12 +72,21 @@ public partial class MenuRoot : Control
     private const int MinWaitFrame = 4;
     
     private CTask CurrentAnimTask;
-    private bool Active;
+    private enum AnimState
+    {
+        Hidden,
+        Appearing,
+        Normal,
+        Disappearing
+    }
+    private AnimState CurrentAnimState;
+    
+    public bool IsActive() => CurrentAnimState != AnimState.Hidden;
 
     public void Cast(MenuRect defaultRect, bool quick = false)
     {
-        if (Active) return;
-        Active = true;
+        if (CurrentAnimState != AnimState.Hidden) return;
+        CurrentAnimState = AnimState.Appearing;
     
         if (IsInstanceValid(defaultRect) && HasRect(defaultRect))
             CurrentRect = defaultRect;
@@ -104,6 +103,7 @@ public partial class MenuRoot : Control
                 await this.AwaitPhysicsFrame(MinWaitFrame, ct);
             }
             else await Appear(ct);
+            CurrentAnimState = AnimState.Normal;
             Disabled = false;
             EmitSignal(SignalName.Casted);
         });
@@ -111,7 +111,8 @@ public partial class MenuRoot : Control
 
     public void Exit(bool quick)
     {
-        if (!Active) return;
+        if (CurrentAnimState != AnimState.Normal) return;
+        CurrentAnimState = AnimState.Disappearing;
         Disabled = true;
         
         CurrentAnimTask?.Cancel();
@@ -123,14 +124,15 @@ public partial class MenuRoot : Control
                 await this.AwaitPhysicsFrame(MinWaitFrame, ct);
             }
             else await Disappear(ct);
-
+            
+            CurrentAnimState = AnimState.Hidden;
             EmitSignal(SignalName.Exited);
         });
     }
 
     public async GDTask CastAsync(MenuRect defaultRect = null, bool quick = false)
     {
-        if (Active) return;
+        if (CurrentAnimState != AnimState.Hidden) return;
         
         Cast(defaultRect, quick);
         await GDTask.ToSignal(this, SignalName.Casted);
@@ -138,7 +140,7 @@ public partial class MenuRoot : Control
     
     public async GDTask ExitAsync(bool quick = false)
     {
-        if (!Active) return;
+        if (CurrentAnimState != AnimState.Normal) return;
         
         Exit(quick);
         await GDTask.ToSignal(this, SignalName.Exited);

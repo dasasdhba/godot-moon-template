@@ -4,7 +4,7 @@ using Utils;
 namespace Component;
 
 [GlobalClass]
-public partial class OverlapReceiver : Node
+public abstract partial class OverlapReceiver : Node
 {
     private const string RefTag = "OverlapReceiver";
     public static bool HasRef(GodotObject node, string key = "")
@@ -12,7 +12,7 @@ public partial class OverlapReceiver : Node
     public static OverlapReceiver GetRef(GodotObject node, string key = "")
         => node.GetData<OverlapReceiver>($"{RefTag}_{key}");
     
-    protected virtual string GetReceiverKey() => "";
+    protected abstract string GetReceiverKey();
     private string GetDataKey() => $"{RefTag}_{GetReceiverKey()}";
     
     [ExportCategory("OverlapReceiver")]
@@ -41,7 +41,7 @@ public partial class OverlapReceiver : Node
     
     [Signal]
     public delegate void MonitorExitedEventHandler(Variant data);
-    
+
     public virtual void MonitorOverlapped(Variant data) {}
     
     public virtual bool IsDisabled() => Disabled || !CanProcess();

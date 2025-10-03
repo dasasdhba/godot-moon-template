@@ -41,7 +41,10 @@ public class AsyncLoader
         if (asyncCount > 0)
             AsyncInit(asyncCount).Forget();
         
-        Root.TreeExited += () => AsyncDead().Forget();
+        Root.Connect(Node.SignalName.TreeExited, Callable.From(() =>
+        {
+            AsyncDead().Forget();
+        }), (uint)GodotObject.ConnectFlags.OneShot);
     }
 
     public Node Create()

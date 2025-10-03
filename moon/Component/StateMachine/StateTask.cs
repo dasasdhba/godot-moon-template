@@ -9,12 +9,12 @@ public abstract class StateTask : StateProcess
     protected abstract GDTask<StateProcess> GetStateTask(CancellationToken ct);
     protected virtual void OnTaskCancelled() { }
 
-    public override void OnStateStart()
+    public override void OnStateStart(StateProcess last)
     {
         _Task = new(GetStateTask) { OnCancel = OnTaskCancelled };
     }
 
-    public override void OnStateEnd()
+    public override void OnStateEnd(StateProcess next)
     {
         _Task?.Cancel();
     }
@@ -26,7 +26,7 @@ public abstract class StateTask : StateProcess
             var result = _Task.GetAwaiter().GetResult();
             _Task = null;
             
-            if (result == this) OnStateStart();
+            if (result == this) OnStateStart(this);
             return result;
         }
         

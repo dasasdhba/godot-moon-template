@@ -18,62 +18,47 @@ public partial class StateMachine
         {
             if (_CurrentState == value) return;
             
-            _CurrentState?.OnStateEnd();
+            _CurrentState?.OnStateEnd(value);
+            value?.OnStateStart(_CurrentState);
             _CurrentState = value;
-            _CurrentState?.OnStateStart();
         }
     }
     
-    private bool _Launched;
-    public void Launch(StateProcess state)
-    {
-        CurrentState = state;
-        _Launched = true;
-    }
-    public void Stop() => CurrentState = null;
-    public bool IsAlive() => !_Launched || CurrentState != null;
     public void Update(double delta) 
          => CurrentState = CurrentState?.OnStateProcess(delta);
+}
+
+public partial class StateMachineNode(StateProcess firstState, bool physics = false, bool oneshot = false) : Node
+{
+    private StateMachine _StateMachine = new();
+    private StateProcess _FirstState = firstState;
+    private bool _Physics = physics;
+    private bool _Oneshot = oneshot;
     
-    public bool Paused { get ;set; } = false;
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+        
+        Launch(_FirstState);
+        this.AddProcess(Process, _Physics);
+    }
+
+    private void Process(double delta)
+    {
+        _StateMachine.Update(delta);
+        
+        if (_Oneshot && !IsAlive()) QueueFree();
+    }
     
-    public void Pause() => Paused = true;
-    public void Resume() => Paused = false;
+    public StateProcess CurrentState => _StateMachine.CurrentState;
+    public void Launch(StateProcess state) => _StateMachine.CurrentState = state;
+    public void Stop() => _StateMachine.CurrentState = null;
+    public bool IsAlive() => _StateMachine.CurrentState != null;
 }
 
 public static partial class StateMachineExtensions
 {
-    private partial class StateMachineNode(StateProcess firstState, bool physics = false) : Node
-    {
-        private StateMachine _StateMachine = new();
-        public StateMachine GetStateMachine() => _StateMachine;
-        
-        private StateProcess _FirstState = firstState;
-        private bool _Physics = physics;
-        
-        public override void _EnterTree()
-        {
-            base._EnterTree();
-            this.AddProcess(Process, _Physics);
-        }
-
-        private void Process(double delta)
-        {
-            if (_StateMachine.Paused) return;
-
-            if (_FirstState != null)
-            {
-                _StateMachine.Launch(_FirstState);
-                _FirstState = null;
-            }
-            
-            _StateMachine.Update(delta);
-            
-            if (!_StateMachine.IsAlive()) QueueFree();
-        }
-    }
-
-    public static StateMachine LaunchState(this Node node, StateProcess state, bool physics = false)
+    public static StateMachineNode LaunchState(this Node node, StateProcess state, bool physics = false, bool oneshot = false)
     {
     #if TOOLS
         if (Engine.IsEditorHint())
@@ -83,12 +68,12 @@ public static partial class StateMachineExtensions
         }
     #endif
     
-        var binding = new StateMachineNode(state, physics);
+        var binding = new StateMachineNode(state, physics, oneshot);
         binding.BindParent(node);
         node.AddChild(binding, false, Node.InternalMode.Front);
-        return binding.GetStateMachine();
+        return binding;
     }
     
-    public static StateMachine LaunchPhysicsState(this Node node, StateProcess state)
-        => node.LaunchState(state, true);
+    public static StateMachineNode LaunchPhysicsState(this Node node, StateProcess state, bool oneshot = false)
+        => node.LaunchState(state, true, oneshot);
 }

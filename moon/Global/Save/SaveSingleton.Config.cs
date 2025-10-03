@@ -19,10 +19,16 @@ public partial class SaveSingleton
     [Export]
     public string FallbackLanguage { get; set; } = "zh";
     
+    [Signal]
+    public delegate void LanguageChangedEventHandler(string newLocale);
+    
     public void SetLanguage(string locale)
     {
         if (!SupportedLanguages.Contains(locale)) locale = FallbackLanguage;
+        if (TranslationServer.GetLocale() == locale) return;
+        
         TranslationServer.SetLocale(locale);
+        EmitSignalLanguageChanged(locale);
     }
     
     public static bool Effect { get ;set; } = true;

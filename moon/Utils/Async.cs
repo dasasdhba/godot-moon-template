@@ -38,9 +38,9 @@ public static partial class Async
             ProcessCallback = physics ? UTimer.UTimerProcessCallback.Physics : UTimer.UTimerProcessCallback.Idle
         };
 
-        timer.BindParent(node);
+        timer.BindParent(node, false);
         timer.SignalTimeout += timer.QueueFree;
-        node.AddChild(timer, false, Node.InternalMode.Front);
+        node.AddChildSafely(timer, false, Node.InternalMode.Front);
         return timer;
     }
     
@@ -91,9 +91,9 @@ public static partial class Async
             Process = process
         };
 
-        timer.BindParent(node);
+        timer.BindParent(node, false);
         timer.SignalTimeout += timer.QueueFree;
-        node.AddChild(timer, false, Node.InternalMode.Front);
+        node.AddChildSafely(timer, false, Node.InternalMode.Front);
         return timer;
     }
     
@@ -117,9 +117,9 @@ public static partial class Async
             process?.Invoke(delta);
         };
 
-        timer.BindParent(node);
+        timer.BindParent(node, false);
         timer.SignalTimeout += timer.QueueFree;
-        node.AddChild(timer, false, Node.InternalMode.Front);
+        node.AddChildSafely(timer, false, Node.InternalMode.Front);
         return timer;
     }
 
@@ -155,9 +155,9 @@ public static partial class Async
             Process = process
         };
 
-        timer.BindParent(node);
+        timer.BindParent(node, false);
         timer.SignalTimeout += timer.QueueFree;
-        node.AddChild(timer, false, Node.InternalMode.Front);
+        node.AddChildSafely(timer, false, Node.InternalMode.Front);
         return timer;
     }
     
@@ -181,9 +181,9 @@ public static partial class Async
             process?.Invoke();
         };
 
-        timer.BindParent(node);
+        timer.BindParent(node, false);
         timer.SignalTimeout += timer.QueueFree;
-        node.AddChild(timer, false, Node.InternalMode.Front);
+        node.AddChildSafely(timer, false, Node.InternalMode.Front);
         return timer;
     }
 
@@ -241,8 +241,8 @@ public static partial class Async
             IsPhysics = physics
         };
         
-        delegateNode.BindParent(node);
-        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        delegateNode.BindParent(node, false);
+        node.AddChildSafely(delegateNode, false, Node.InternalMode.Front); 
         return delegateNode;
     }
     
@@ -256,8 +256,8 @@ public static partial class Async
         delegateNode.Action = delta 
             => ct.IsCancellationRequested || action.Invoke(delta);
         
-        delegateNode.BindParent(node);
-        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        delegateNode.BindParent(node, false);
+        node.AddChildSafely(delegateNode, false, Node.InternalMode.Front); 
         return delegateNode;
     }
 
@@ -313,8 +313,8 @@ public static partial class Async
             IsPhysics = physics
         };
         
-        delegateNode.BindParent(node);
-        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        delegateNode.BindParent(node, false);
+        node.AddChildSafely(delegateNode, false, Node.InternalMode.Front); 
         return delegateNode;
     }
     
@@ -328,8 +328,8 @@ public static partial class Async
         delegateNode.Action = () 
             => ct.IsCancellationRequested || action.Invoke();
         
-        delegateNode.BindParent(node);
-        node.AddChild(delegateNode, false, Node.InternalMode.Front); 
+        delegateNode.BindParent(node, false);
+        node.AddChildSafely(delegateNode, false, Node.InternalMode.Front); 
         return delegateNode;
     }
 
@@ -600,8 +600,8 @@ public static partial class Async
         tween.Pause();
         tween.BindNode(tweenNode);
 
-        tweenNode.BindParent(node);
-        node.AddChild(tweenNode, false, Node.InternalMode.Front);
+        tweenNode.BindParent(node, false);
+        node.AddChildSafely(tweenNode, false, Node.InternalMode.Front);
         return tweenNode;
     }
     
@@ -626,8 +626,8 @@ public static partial class Async
         tween.Pause();
         tween.BindNode(tweenNode);
 
-        tweenNode.BindParent(node);
-        node.AddChild(tweenNode, false, Node.InternalMode.Front);
+        tweenNode.BindParent(node, false);
+        node.AddChildSafely(tweenNode, false, Node.InternalMode.Front);
         return tweenNode;
     }
 

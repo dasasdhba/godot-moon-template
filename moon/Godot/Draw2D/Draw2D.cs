@@ -66,21 +66,17 @@ public partial class Draw2D : Node2D
     private List<Action<Rid>> QueuedDrawingTasks = new();
     protected List<Rid> QueuedDrawers { get ;set; } = new();
 
-    /// <summary>
-    /// Clear all the queued drawing tasks.
-    /// </summary>
-    protected void ClearQueuedDraw() => QueuedDrawingTasks.Clear();
-
     public Draw2D() : base()
     {
         TreeEntered += () =>
         {
             this.AddProcess(ProcessDrawing, () => ProcessCallback == Draw2DProcessCallback.Physics);
             
+            var self = GetCanvasItem();
             for (int i = 0; i < MaxDrawingTask; i++)
             {
                 var drawer = RenderingServer.CanvasItemCreate();
-                RenderingServer.CanvasItemSetParent(drawer, GetCanvasItem());
+                RenderingServer.CanvasItemSetParent(drawer, self);
                 QueuedDrawers.Add(drawer);
             }
         };
@@ -99,9 +95,8 @@ public partial class Draw2D : Node2D
 
     /// <summary>
     /// Main draw method, called automatically by default process callback mode.
-    /// For manual mode you have to set up draw tasks and call this method manually.
     /// </summary>
-    public void Redraw()
+    private void Redraw()
     {
         for (int i = 0; i < QueuedDrawers.Count; i++)
         {
@@ -117,12 +112,8 @@ public partial class Draw2D : Node2D
             RenderingServer.CanvasItemSetVisible(drawer, true);
             QueuedDrawingTasks[i].Invoke(drawer);
         }
-    }
-
-    protected void ClearAll()
-    {
-        ClearQueuedDraw();
-        ClearDrawSettings();
+        
+        QueuedDrawingTasks.Clear();
     }
 
     protected void ClearDrawSettings()
@@ -143,14 +134,14 @@ public partial class Draw2D : Node2D
     /// <returns>true to update draw, false to keep last draw.</returns>
     protected virtual bool DrawProcess(double delta)
     {
-        ClearAll();
+        ClearDrawSettings();
 
         return true;
     }
 
     private void ProcessDrawing(double delta)
     {
-        if (VisibleOnly && !Visible) { return; }
+        if (VisibleOnly && !IsVisibleInTree()) { return; }
 
         if (DrawProcess(delta))
             Redraw();

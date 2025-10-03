@@ -37,7 +37,7 @@ public partial class DebugFill : NodeSize2D
         SignalSizeChanged += QueueRedraw;
     }
 
-    public void OnBeforeSerialize()
+    public virtual void OnBeforeSerialize()
     {
         TreeEntered -= QueueRedraw;
         SignalSizeChanged -= QueueRedraw;

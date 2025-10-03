@@ -12,7 +12,7 @@ public class CsvFile
 
     public Error Load(string path, string splitter = ",")
     {
-        var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+        using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
         if (file == null) return Error.Failed;
         
         Data.Clear();
